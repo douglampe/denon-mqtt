@@ -29,7 +29,7 @@ export class MainParser extends BaseParser implements ICommandHandler {
 
     [
       { prefix: 'Z2', key: 'zone_2_power', list: ['ON', 'OFF'] },
-      { prefix: 'Z3', key: 'zone_1_power', list: ['ON', 'OFF'] },
+      { prefix: 'Z3', key: 'zone_3_power', list: ['ON', 'OFF'] },
     ].map((i) => this.addListParser(i));
 
     [

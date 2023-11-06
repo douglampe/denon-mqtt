@@ -11,7 +11,6 @@ export interface StateHandlerOptions {
 
 export class MqttBroadcaster implements StateHandler {
   private stateTopic: string;
-  private commandTopic: string;
 
   public static DefaultOptions = {
     prefix: 'denon',
@@ -20,23 +19,12 @@ export class MqttBroadcaster implements StateHandler {
   };
 
   constructor(private options: StateHandlerOptions) {
-    this.stateTopic = `denon/receivers/${this.options.id}/state`;
-    this.commandTopic = `denon/receivers/${this.options.id}/set`;
+    this.stateTopic = `${this.options.id}/state`;
   }
 
   public async send(topic: string, message: string) {
     console.debug(`Sending message to topic ${topic}: ${message}`);
     await this.options.client?.publishAsync(topic, message);
-  }
-
-  public async register(name = 'Denon-Receiver', id = 'denon') {
-    await this.send(
-      this.commandTopic,
-      JSON.stringify({
-        name,
-        id
-      }),
-    );
   }
 
   public async updateState(key: string, value: string): Promise<void> {
