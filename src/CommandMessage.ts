@@ -1,4 +1,7 @@
+import { ReceiverSettings, StateValue } from 'denon-state-manager';
+
 export interface CommandMessage {
-  command: string;
-  value?: string;
+  command: ReceiverSettings;
+  value?: StateValue;
+  zone?: number;
 }
