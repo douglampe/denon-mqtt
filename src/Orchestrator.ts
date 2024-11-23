@@ -2,12 +2,11 @@ import dotenv from 'dotenv';
 import { connectAsync } from 'mqtt';
 import { Telnet } from 'telnet-client';
 
-import { MainParser } from './MainParser';
 import { MqttBroadcaster } from './MqttBroadcaster';
 import { MqttListener } from './MqttListener';
+import { StateParser } from './StateParser';
 import { TelnetBroadcaster } from './TelnetBroadcaster';
 import { TelnetListener } from './TelnetListener';
-import { ZoneParser } from './ZoneParser';
 
 export class Orchestrator {
   public static async run() {
@@ -52,11 +51,12 @@ export class Orchestrator {
 
     const mqttBroadcaster = new MqttBroadcaster({
       ...MqttBroadcaster.DefaultOptions,
-      client: mqttClient,
+      cb: async (topic: string, message: string) => {
+        await mqttClient.publishAsync(topic, message);
+      },
     });
 
-    telnetListener.addHandler(new MainParser(mqttBroadcaster));
-    telnetListener.addHandler(new ZoneParser(mqttBroadcaster));
+    telnetListener.addHandler(new StateParser(mqttBroadcaster));
 
     await mqttListener.listen();
 

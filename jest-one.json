@@ -1,0 +1,10 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "./",
+  "modulePaths": ["<rootDir>"],
+  "testEnvironment": "node",
+  "collectCoverageFrom": ["src/**/*.ts", "!src/index.ts"],
+  "transform": {
+    "^.+\\.ts$": "ts-jest"
+  }
+}

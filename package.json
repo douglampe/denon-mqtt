@@ -8,7 +8,9 @@
     "dev": "ts-node src/entryPoint.ts",
     "lint": "eslint src --fix --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
-    "test": "jest"
+    "test": "jest --config jest.json --coverage --detectOpenHandles",
+    "test:nocover": "jest --config jest.json --detectOpenHandles",
+    "test:one": "jest --config jest-one.json --detectOpenHandles"
   },
   "repository": {
     "type": "git",
@@ -21,11 +23,13 @@
   },
   "homepage": "https://github.com/douglampe/denon-mqtt#readme",
   "dependencies": {
+    "denon-state-manager": "^0.0.2",
     "dotenv": "^16.3.1",
     "mqtt": "^5.1.4",
     "telnet-client": "^2.1.0"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.12",
     "@typescript-eslint/eslint-plugin": "^5.54.0",
     "@typescript-eslint/parser": "^5.54.0",
     "eslint": "^8.53.0",
@@ -34,6 +38,7 @@
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "jest": "^29.7.0",
     "prettier": "^3.0.3",
+    "ts-jest": "^29.1.2",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   }

@@ -33,7 +33,7 @@ AVR_HOST=192.168.0.123
 ```bash
 yarn dev
 # OR
-npm i
+npm run dev
 ```
 
 ## What is This?

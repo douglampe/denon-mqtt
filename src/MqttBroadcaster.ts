@@ -1,16 +1,14 @@
-import { MqttClient } from 'mqtt';
-
-import { StateHandler } from './StateHandler';
+import { ReceiverSettings, StateUpdate } from 'denon-state-manager';
 
 export interface StateHandlerOptions {
-  client?: MqttClient;
   prefix: string;
   name: string;
   id: string;
+  cb: (topic: string, message: string) => Promise<void>;
 }
 
-export class MqttBroadcaster implements StateHandler {
-  private stateTopic: string;
+export class MqttBroadcaster {
+  private topic: string;
 
   public static DefaultOptions = {
     prefix: 'denon',
@@ -19,15 +17,12 @@ export class MqttBroadcaster implements StateHandler {
   };
 
   constructor(private options: StateHandlerOptions) {
-    this.stateTopic = `${this.options.id}/state`;
+    this.topic = `${this.options.prefix}/${this.options.id}/state`;
   }
 
-  public async send(topic: string, message: string) {
-    console.debug(`Sending message to topic ${topic}: ${message}`);
-    await this.options.client?.publishAsync(topic, message);
-  }
-
-  public async updateState(key: string, value: string): Promise<void> {
-    await this.send(this.stateTopic, `\{\"${key}\": \"${value}\"\}`);
+  public async updateState(update: StateUpdate): Promise<void> {
+    const message = `\{\"${ReceiverSettings[update.key]}\": ${JSON.stringify(update.value)}\}`;
+    console.debug(`Sending message to topic ${this.topic}: ${message}`);
+    await this.options.cb(this.topic, message);
   }
 }
