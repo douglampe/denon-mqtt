@@ -17,23 +17,27 @@ export class TelnetListener {
   }
 
   async read(): Promise<void> {
-    const data = await this.client.nextData();
-    const lines = data?.split('\r') ?? [];
+    try {
+      const data = await this.client.nextData();
+      const lines = data?.split('\r') ?? [];
 
-    for (const line of lines) {
-      let handled = false;
-      for await (const handler of this.handlers) {
+      for (const line of lines) {
+        let handled = false;
         if (line !== '') {
-          console.debug('Received:', line);
-          handled = await handler.handle(line);
-          if (handled) {
-            break;
+          for await (const handler of this.handlers) {
+            console.debug('Received:', line);
+            handled = await handler.handle(line);
+            if (handled) {
+              break;
+            }
           }
         }
+        if (!handled && line != '') {
+          console.debug('Unhandled:', line);
+        }
       }
-      if (!handled && line != '') {
-        console.debug('Unhandled:', line);
-      }
+    } catch (err) {
+      console.error(err);
     }
   }
 }

@@ -14,7 +14,7 @@ export class StateParser implements ICommandHandler {
 
   public async handle(data: string): Promise<boolean> {
     this.stateManager.handleCommand(data);
-    if (await this.handleUpdate(this.stateManager.mainState)) {
+    if (await this.handleUpdate(this.stateManager.mainState, 1)) {
       return true;
     } else if (this.stateManager.zone2State && (await this.handleUpdate(this.stateManager.zone2State, 2))) {
       return true;
@@ -25,12 +25,11 @@ export class StateParser implements ICommandHandler {
     return false;
   }
 
-  private async handleUpdate(state: ReceiverState, zone?: number): Promise<boolean> {
+  private async handleUpdate(state: ReceiverState, zone: number): Promise<boolean> {
     if (state.isUpdated()) {
       const command = state.popUpdated();
       if (command) {
-        command.value.zone = zone;
-        await this.broadcaster.updateState(command);
+        await this.broadcaster.publishState(state, command, zone);
         return true;
       }
     }

@@ -1,0 +1,132 @@
+default_config:
+
+mqtt:
+  sensor: 
+    - name: "Living Room Audio State"
+      object_id: denon_main_zone_state
+      state_topic: "denon/switch/denon_main_zone_power/state"
+      json_attributes_topic: "denon/sensor/denon_main_zone_state/state"
+    - name: "Rumpus Room Audio State"
+      object_id: denon_zone2_state
+      state_topic: "denon/switch/denon_zone2_power/state"
+      json_attributes_topic: "denon/sensor/denon_zone2_state/state"
+  fan:
+    - name: "Living Room Audio Volume"
+      object_id: denon_main_zone_volume
+      state_topic: "denon/switch/denon_main_zone_power/state"
+      command_topic: "denon/switch/denon_main_zone_power/command"
+      command_template: '{ "text": {{ value}} }'
+      percentage_state_topic: "denon/volume/denon_main_zone_volume/state"
+      percentage_command_topic: "denon/volume/denon_main_zone_volume/command"
+      percentage_command_template: '{ "text": {{ value}} }'
+      speed_range_min: 1
+      speed_range_max: 99
+    - name: "Rumpus Room Audio Volume"
+      object_id: denon_zone2_volume
+      state_topic: "denon/switch/denon_zone2_power/state"
+      command_topic: "denon/switch/denon_zone2_power/command"
+      command_template: '{ "text": {{ value}} }'
+      percentage_state_topic: "denon/volume/denon_zone2_volume/state"
+      percentage_command_topic: "denon/volume/denon_zone2_volume/command"
+      percentage_command_template: '{ "text": {{ value}} }'
+      speed_range_min: 1
+      speed_range_max: 99
+  switch:
+    - name: "Living Room Audio Power"
+      object_id: denon_main_zone_power
+      state_topic: "denon/switch/denon_main_zone_power/state"
+      command_topic: "denon/switch/denon_main_zone_power/command"
+      command_template: '{ "text": {{ value}} }'
+    - name: "Living Room Audio Mute"
+      object_id: denon_main_zone_mute
+      state_topic: "denon/switch/denon_main_zone_mute/state"
+      command_topic: "denon/switch/denon_main_zone_mute/command"
+      command_template: '{ "text": {{ value}} }'
+    - name: "Living Room Volume Up/Down"
+      object_id: denon_main_zone_volume_up_down
+      state_topic: "denon/device/denon_main_zone_none/state"
+      command_topic: "denon/device/denon_main_zone_none/command"
+      command_template: '{ "text": {{ value}} }'
+    - name: "Rumpus Room Audio Power"
+      object_id: denon_zone2_power
+      state_topic: "denon/switch/denon_zone2_power/state"
+      command_topic: "denon/switch/denon_zone2_power/command"
+      command_template: '{ "text": {{ value}} }'
+    - name: "Rumpus Room Audio Mute"
+      object_id: denon_zone2_mute
+      state_topic: "denon/switch/denon_zone2_mute/state"
+      command_topic: "denon/switch/denon_zone2_mute/command"
+      command_template: '{ "text": {{ value}} }'
+    - name: "Rumpus Room Volume Up/Down"
+      object_id: denon_zone2_volume_up_down
+      state_topic: "denon/device/denon_zone2_none/state"
+      command_topic: "denon/device/denon_zone2_none/command"
+      command_template: '{ "text": {{ value}} }'
+
+media_player:
+  - platform: universal
+    name: Living Room Audio
+    object_id: denon_avr
+    commands:
+      turn_on:
+        action: switch.turn_on
+        target:
+          entity_id: switch.denon_main_zone_power
+      turn_off:
+        action: switch.turn_off
+        target:
+          entity_id: switch.denon_main_zone_power
+      volume_up:
+        action: switch.turn_on
+        target:
+          entity_id: switch.denon_main_zone_volume_up_down
+      volume_down:
+        action: switch.turn_off
+        target:
+          entity_id: switch.denon_main_zone_volume_up_down
+      volume_mute:
+        action: switch.turn_on
+        target:
+          entity_id: switch.denon_main_zone_mute
+      volume_set:
+        action: fan.set_percentage
+        target:
+          entity_id: fan.denon_main_zone_volume
+        data:
+          volume_level: "{{ volume_level }}"
+    attributes:
+      state: switch.denon_main_zone_power
+      is_volume_muted: '{{ switch.denon_main_zone_mute.state == "ON" }}'
+  - platform: universal
+    name: Rumpus Room Audio
+    object_id: denon_avr_zone2
+    commands:
+      turn_on:
+        action: switch.turn_on
+        target:
+          entity_id: switch.denon_zone2_power
+      turn_off:
+        action: switch.turn_off
+        target:
+          entity_id: switch.denon_zone2_power
+      volume_up:
+        action: switch.turn_on
+        target:
+          entity_id: switch.denon_zone2_volume_up_down
+      volume_down:
+        action: switch.turn_off
+        target:
+          entity_id: switch.denon_zone2_volume_up_down
+      volume_mute:
+        action: switch.turn_on
+        target:
+          entity_id: switch.denon_zone2_mute
+      volume_set:
+        action: fan.set_percentage
+        target:
+          entity_id: fan.denon_zone2_volume
+        data:
+          volume_level: "{{ volume_level }}"
+    attributes:
+      state: switch.denon_zone2_power
+      is_volume_muted: '{{ switch.denon_zone2_mute.state == "ON" }}'

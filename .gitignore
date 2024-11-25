@@ -2,3 +2,5 @@ node_modules/
 dist/
 .env
 coverage/
+ha-config/*
+!ha-config/configuration.yaml
