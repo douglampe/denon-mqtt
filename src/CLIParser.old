@@ -1,0 +1,65 @@
+import { Command } from 'commander';
+
+import { Orchestrator, OrchestratorOptions } from './Orchestrator';
+import { ReceiverConfig } from './ReceiverConfig';
+
+export class CLIParser {
+  public static isTest: boolean;
+  public static log: (message: any) => void = console.log;
+
+  public static async run(options: { name: string; version: string; args: string[] }) {
+    const program = new Command();
+
+    if (CLIParser.isTest) {
+      program.exitOverride().configureOutput({
+        writeOut: CLIParser.log,
+        writeErr: CLIParser.log,
+        getOutHelpWidth: () => 160,
+        getErrHelpWidth: () => 160,
+      });
+    }
+
+    program
+      .name(options.name)
+      .version(options.version, '-i, --info', 'Display current version number')
+      .option('-f, --file <file>', 'Get configuration from JSON file')
+      .option('-m, --mqtt', 'MQTT URL', 'localhost')
+      .option('-u, --username', 'MQTT Username', 'user')
+      .option('-p, --password', 'MQTT Password', 'password')
+      .option('--port', 'MQTT Port', '1883')
+      .option('--prefix', 'MQTT Topic Prefix', 'denon')
+      .option('-a, --avr', 'Comma-separated list of AVR IP addresses')
+      .option('--name', 'Comma-separated list of AVR friendly names', 'Home Theater')
+      .option('--id', 'Comma-separated list of AVR unique IDs', 'denon')
+      .action(CLIParser.start);
+
+    await program.parseAsync(options.args);
+  }
+
+  public static async start(_opts: any, command: Command) {
+    const options = command.optsWithGlobals();
+
+    const receivers = [] as ReceiverConfig[];
+
+    const avrHosts = options.avrs.split(',');
+    const avrNames = options.name.split(',');
+    const avrIds = options.id.split(',');
+
+    if (avrHosts.length + avrNames.length + avrIds !== avrHosts.length * 3) {
+      throw new Error('--avr, --name, and --id lists must be the same length.');
+    }
+
+    for (let i = 0; i < avrHosts.length; i++) {
+      receivers.push({
+        id: avrIds[i],
+        name: avrNames[i],
+        ip: avrHosts[i],
+      });
+    }
+
+    return Orchestrator.run({
+      ...options,
+      receivers,
+    } as OrchestratorOptions);
+  }
+}

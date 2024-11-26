@@ -2,13 +2,13 @@ import { MessageFormatter, ReceiverSettings, StateValue } from 'denon-state-mana
 import { MqttClient } from 'mqtt';
 
 import { ListenerConfig } from './ListenerConfig';
-import { TelnetBroadcaster } from './TelnetBroadcaster';
+import { ReceiverManager } from './ReceiverManager';
 
 export interface MqttListenerOptions {
   prefix: string;
   id: string;
   client: MqttClient;
-  broadcaster: TelnetBroadcaster;
+  receiver: ReceiverManager;
   zones: number;
 }
 
@@ -40,7 +40,7 @@ export class MqttListener {
     }
   }
 
-  public async listen() {
+  public async listen(cb: (command: string) => Promise<void>) {
     const promises = [];
 
     for (let i = 1; i <= this.options.zones; i++) {
@@ -58,15 +58,15 @@ export class MqttListener {
       console.debug(`MQTT Message on topic ${topic}:`, body);
 
       if (topic === this.getTopic('device', 'none', 1) && body === 'REFRESH') {
-        await this.handleMessage(ReceiverSettings.None, 'REFRESH', 1);
-        await this.options.broadcaster.init();
+        await this.handleMessage(ReceiverSettings.None, 'REFRESH', 1, cb);
+        await this.options.receiver.init();
         return;
       }
 
       const config = this.listenerConfigs[topic];
 
       if (config) {
-        this.handleMessage(config.command, body, config.zone)
+        this.handleMessage(config.command, body, config.zone, cb)
           .then()
           .catch((error) => console.error(error));
       } else {
@@ -75,13 +75,13 @@ export class MqttListener {
     });
   }
 
-  async handleMessage(command: ReceiverSettings, body: string, zone: number) {
+  async handleMessage(command: ReceiverSettings, body: string, zone: number, cb: (command: string) => Promise<void>) {
     const value = JSON.parse(body) as StateValue;
 
     const avrCommand = zone === 1 ? MessageFormatter.getCommand(command, value) : MessageFormatter.getCommand(command, value, zone);
 
     if (avrCommand) {
-      await this.options.broadcaster.send(avrCommand);
+      await cb(avrCommand);
     } else {
       console.debug(`No message translation found for command ${ReceiverSettings[command]} for zone ${zone} or error parsing value:`, value);
     }

@@ -1,4 +1,9 @@
 {
+  "exclude": [
+    "**/*.spec.ts",
+    "node_modules/**",
+    "dist/**"
+  ],
   "compilerOptions": {
     "module": "commonjs",
     "declaration": true,
@@ -11,12 +16,12 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
-    "skipLibCheck": true,
     "strictNullChecks": true,
     "noImplicitAny": true,
     "strictBindCallApply": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
-    "esModuleInterop": true
+    "traceResolution": true,
+    "allowJs": true,
   }
 }
