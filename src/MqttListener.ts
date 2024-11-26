@@ -2,24 +2,17 @@ import { MessageFormatter, ReceiverSettings, StateValue } from 'denon-state-mana
 import { MqttClient } from 'mqtt';
 
 import { ListenerConfig } from './ListenerConfig';
-import { TelnetBroadcaster } from './TelnetBroadcaster';
+import { ReceiverManager } from './ReceiverManager';
 
 export interface MqttListenerOptions {
   prefix: string;
   id: string;
   client: MqttClient;
-  broadcaster: TelnetBroadcaster;
-  zones: number;
+  receiver: ReceiverManager;
 }
 
 export class MqttListener {
   private listenerConfigs: Record<string, ListenerConfig> = {};
-
-  public static DefaultOptions = {
-    prefix: 'denon',
-    id: 'denon',
-    zones: 3,
-  };
 
   constructor(private options: MqttListenerOptions) {}
 
@@ -32,41 +25,39 @@ export class MqttListener {
     const topic = this.getTopic(component, ReceiverSettings[command].toLowerCase(), zone);
     this.listenerConfigs[topic] = { command, zone };
 
-    try {
-      await this.options.client.subscribeAsync(topic);
-      console.debug(`Listening to topic ${topic}`);
-    } catch (err) {
-      console.error(`Error subscribing to topic ${topic}:`, err);
-    }
+    await this.options.client.subscribeAsync(topic);
+    console.debug(`Listening to topic ${topic}`);
   }
 
-  public async listen() {
-    const promises = [];
+  public async listen(cb: (command: string) => Promise<void>) {
+    for (let i = 1; i <= this.options.receiver.options.zones.length; i++) {
+      const zone = this.options.receiver.options.zones[i - 1];
 
-    for (let i = 1; i <= this.options.zones; i++) {
+      console.debug(`Configuring receiver ${this.options.receiver.options.name} zone ${zone}`);
+
+      const promises = [];
       promises.push(this.listenToZone('device', ReceiverSettings.None, i));
       promises.push(this.listenToZone('switch', ReceiverSettings.Power, i));
       promises.push(this.listenToZone('switch', ReceiverSettings.Mute, i));
       promises.push(this.listenToZone('select', ReceiverSettings.Source, i));
       promises.push(this.listenToZone('volume', ReceiverSettings.Volume, i));
-    }
 
-    await Promise.allSettled(promises);
+      await Promise.allSettled(promises);
+    }
 
     this.options.client.on('message', async (topic, message) => {
       const body = message.toString();
       console.debug(`MQTT Message on topic ${topic}:`, body);
 
       if (topic === this.getTopic('device', 'none', 1) && body === 'REFRESH') {
-        await this.handleMessage(ReceiverSettings.None, 'REFRESH', 1);
-        await this.options.broadcaster.init();
+        await this.handleMessage(ReceiverSettings.None, 'REFRESH', 1, cb);
         return;
       }
 
       const config = this.listenerConfigs[topic];
 
       if (config) {
-        this.handleMessage(config.command, body, config.zone)
+        this.handleMessage(config.command, body, config.zone, cb)
           .then()
           .catch((error) => console.error(error));
       } else {
@@ -75,13 +66,13 @@ export class MqttListener {
     });
   }
 
-  async handleMessage(command: ReceiverSettings, body: string, zone: number) {
+  async handleMessage(command: ReceiverSettings, body: string, zone: number, cb: (command: string) => Promise<void>) {
     const value = JSON.parse(body) as StateValue;
 
     const avrCommand = zone === 1 ? MessageFormatter.getCommand(command, value) : MessageFormatter.getCommand(command, value, zone);
 
     if (avrCommand) {
-      await this.options.broadcaster.send(avrCommand);
+      await cb(avrCommand);
     } else {
       console.debug(`No message translation found for command ${ReceiverSettings[command]} for zone ${zone} or error parsing value:`, value);
     }

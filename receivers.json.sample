@@ -1,0 +1,74 @@
+[
+  {
+    "name": "Home Theater",
+    "ip": "192.168.0.1234",
+    "id": "home_theater",
+    "sources": [
+      {"code": "SAT/CBL", "display": "Fire TV"},
+      {"code": "DVD", "display": "AppleTV"},
+      {"code": "BD", "display": "Blu-ray"},
+      {"code": "GAME", "display": "XBox"},
+      {"code": "MPLAY", "display": "Karaoke"},
+      {"code": "TV", "display": "TV Audio"},
+      {"code": "AUX1", "display": "pi"},
+      {"code": "AUX2", "display": "AUX2"},
+      {"code": "CD", "display": "Alexa"},
+      {"code": "PHONO", "display": "Phono"},
+      {"code": "TUNER", "display": "Tuner"},
+      {"code": "NET", "display": "HEOS Music"}
+    ],
+    "zones": [
+      {
+        "index": "1",
+        "name": "Living Room",
+        "sources": ["SAT/CBL","DVD","BD","GAME","MPLAY","TV","AUX1","AUX2","CD","PHONO","TUNER","NET"]
+      },
+      {
+        "index": "2",
+        "name": "Rumpus Room",
+        "sources": ["SAT/CBL","DVD","BD","GAME","MPLAY","TV","AUX1","AUX2","CD","PHONO","TUNER","NET"]
+      },
+      {
+        "index": "3",
+        "name": "Back Porch",
+        "sources": ["SAT/CBL","DVD","BD","GAME","MPLAY","TV","AUX1","AUX2","CD","PHONO","TUNER","NET"]
+      }
+    ]
+  },
+  {
+    "name": "Office",
+    "ip": "192.168.0.5678",
+    "id": "office_avr",
+    "sources": [
+      {"code": "SAT/CBL", "display": "Xbox One"},
+      {"code": "DVD", "display": "DVD"},
+      {"code": "BD", "display": "Blu-ray"},
+      {"code": "GAME", "display": "Xbox One"},
+      {"code": "MPLAY", "display": "Media Player"},
+      {"code": "TV", "display": "TV Audio"},
+      {"code": "AUX1", "display": "AUX1"},
+      {"code": "AUX2", "display": "AUX2"},
+      {"code": "CD", "display": "Alexa"},
+      {"code": "PHONO", "display": "Phono"},
+      {"code": "TUNER", "display": "Tuner"},
+      {"code": "NET", "display": "HEOS Music"}
+    ],
+    "zones": [
+      {
+        "index": "1",
+        "name": "Living Room",
+        "sources": ["SAT/CBL","DVD","BD","GAME","MPLAY","TV","AUX1","AUX2","CD","PHONO","TUNER","NET"]
+      },
+      {
+        "index": "2",
+        "name": "Rumpus Room",
+        "sources": ["SAT/CBL","DVD","BD","GAME","MPLAY","TV","AUX1","AUX2","CD","PHONO","TUNER","NET"]
+      },
+      {
+        "index": "3",
+        "name": "Back Porch",
+        "sources": ["SAT/CBL","DVD","BD","GAME","MPLAY","TV","AUX1","AUX2","CD","PHONO","TUNER","NET"]
+      }
+    ]
+  }
+]

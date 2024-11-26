@@ -1,9 +1,10 @@
 import { ReceiverSettings, ReceiverState, StateUpdate, StateValue } from 'denon-state-manager';
 import { MqttClient } from 'mqtt/*';
 
-export interface StateHandlerOptions {
+import { MqttUpdate } from './MqttUpdate';
+
+export interface MqttBroadcasterOptions {
   prefix: string;
-  name: string;
   id: string;
   client: MqttClient;
 }
@@ -11,11 +12,10 @@ export interface StateHandlerOptions {
 export class MqttBroadcaster {
   public static DefaultOptions = {
     prefix: 'denon',
-    name: 'Denon-Receiver',
     id: 'denon',
   };
 
-  constructor(private options: StateHandlerOptions) {}
+  constructor(private options: MqttBroadcasterOptions) {}
 
   public getTopic(component: string, id: string, zone: number) {
     const zonePrefix = zone == 1 ? 'main_zone' : `zone${zone}`;
@@ -36,10 +36,16 @@ export class MqttBroadcaster {
     return stateWithKeys;
   }
 
-  public async publishState(state: ReceiverState, update: StateUpdate, zone: number): Promise<void> {
+  public async publish(update: MqttUpdate): Promise<void> {
     let component: string | undefined;
     let message: string | undefined;
-    let id = ReceiverSettings[update.key].toLowerCase();
+    const key = update.key ?? ReceiverSettings.None;
+    const id = ReceiverSettings[key].toLowerCase();
+
+    if (!update.value) {
+      console.error('update.value is undefined');
+      return;
+    }
 
     switch (update.key) {
       case ReceiverSettings.Power:
@@ -58,21 +64,21 @@ export class MqttBroadcaster {
     }
 
     if (message === '') {
-      throw new Error(`Could not parse message payload from value for setting ${ReceiverSettings[update.key]}: ${JSON.stringify(update.value)}`);
+      throw new Error(`Could not parse message payload from value for setting ${ReceiverSettings[key]}: ${JSON.stringify(update.value)}`);
     }
 
     if (component && message) {
-      const topic = this.getTopic(component, id, zone);
+      const topic = this.getTopic(component, id, update.zone);
 
       console.debug(`Sending message to topic ${topic}: ${message}`);
       this.options.client.publish(topic, message);
     }
+  }
 
-    component = 'sensor';
-    message = JSON.stringify(this.getStateWithKeys(state.state));
-    id = 'state';
+  public async publishState(state: ReceiverState, zone: number): Promise<void> {
+    const message = JSON.stringify(this.getStateWithKeys(state.state));
 
-    const topic = this.getTopic(component, id, zone);
+    const topic = this.getTopic('sensor', 'state', zone);
 
     console.debug(`Sending message to topic ${topic}: ${message}`);
     this.options.client.publish(topic, message);

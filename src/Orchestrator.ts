@@ -1,52 +1,107 @@
-import dotenv from 'dotenv';
-import { connect, connectAsync } from 'mqtt';
-import { Telnet } from 'telnet-client';
+import { connectAsync, MqttClient } from 'mqtt';
 
-import { MqttBroadcaster } from './MqttBroadcaster';
-import { MqttListener } from './MqttListener';
-import { StateParser } from './StateParser';
-import { TelnetBroadcaster } from './TelnetBroadcaster';
-import { TelnetListener } from './TelnetListener';
+import { MqttManager } from './MqttManager';
+import { ReceiverConfig } from './ReceiverConfig';
+import { ReceiverManager } from './ReceiverManager';
+
+export interface OrchestratorOptions {
+  receivers: ReceiverConfig[];
+  mqtt: string;
+  port: string;
+  username: string;
+  password: string;
+  prefix: string;
+}
 
 export class Orchestrator {
-  public static async run() {
-    dotenv.config();
+  private mqttClient: MqttClient;
+  private mqttManagers: MqttManager[] = [];
+  private receiverManagers: ReceiverManager[] = [];
 
-    console.debug('Starting...');
+  constructor(private options: OrchestratorOptions) {}
 
-    const avrHost = process.env.AVR_HOST;
-
-    if (!avrHost) {
-      throw new Error('AVR host address must be set as environment variable AVR_HOST');
-    }
-
-    const telnetClient = new Telnet();
-    await telnetClient.connect({
-      host: avrHost,
-      negotiationMandatory: false,
-      timeout: 5000,
-      irs: '\r',
-      ors: '\r',
-      sendTimeout: undefined,
+  async init() {
+    this.mqttClient = await connectAsync(`mqtt://${this.options.mqtt}:${this.options.port}`, {
+      username: this.options.username,
+      password: this.options.password,
     });
 
-    console.debug('Connected to Receiver');
+    console.debug('Connected to MQTT');
 
-    const mqttHost = process.env.MQTT_HOST ?? 'localhost';
-    const mqttPort = parseInt(process.env.MQTT_PORT ?? '1883');
-    const mqttUser = process.env.MQTT_USER ?? 'user';
-    const mqttPassword = process.env.MQTT_PWD ?? 'password';
+    this.mqttClient.on('error', (err) => {
+      console.error(err);
+      process.exit();
+    });
 
-    const mqttClient = await connectAsync(`mqtt://${mqttHost}:${mqttPort}`, { username: mqttUser, password: mqttPassword });
+    for await (const config of this.options.receivers) {
+      await this.addReceiver(config);
+    }
+  }
+
+  async addReceiver(receiver: ReceiverConfig) {
+    console.debug(`Adding receiver ${receiver.name}`);
+
+    const mqttManager = new MqttManager(this.mqttClient, {
+      host: this.options.mqtt,
+      port: parseInt(this.options.port),
+      username: this.options.username,
+      password: this.options.password,
+      prefix: this.options.prefix,
+      id: receiver.id,
+      receiver,
+    });
+
+    this.mqttManagers.push(mqttManager);
+
+    const receiverManager = new ReceiverManager(receiver, mqttManager);
+
+    this.receiverManagers.push(receiverManager);
+
+    await mqttManager.connect(receiverManager);
+
+    await receiverManager.connect();
+
+    await receiverManager.start();
+  }
+
+  async start() {
+    while (true) {
+      await Promise.all(this.receiverManagers.map((r) => r.read()));
+    }
+  }
+
+  async cleanup() {
+    const promises = [] as Promise<void>[];
+
+    for await (const mqttManager of this.mqttManagers) {
+      promises.push(mqttManager.disconnect());
+    }
+
+    for await (const receiverManager of this.receiverManagers) {
+      promises.push(receiverManager.disconnect());
+    }
+
+    await Promise.all(promises);
+  }
+
+  public static async run(options: OrchestratorOptions) {
+    console.debug('Starting...');
+
+    if (options.receivers.length === 0) {
+      throw new Error('At least one AVR config must be provided');
+    }
+
+    const orchestrator = new Orchestrator(options);
+
+    await orchestrator.init();
+
+    await orchestrator.start();
 
     Orchestrator.handleExit(() => {
       console.debug('Cleaning up...');
-      try {
-        mqttClient.end();
-      } catch (_error) {}
 
-      telnetClient
-        .destroy()
+      orchestrator
+        .cleanup()
         .then(() => {
           process.exit();
         })
@@ -54,37 +109,6 @@ export class Orchestrator {
           process.exit();
         });
     });
-
-    const telnetListener = new TelnetListener(telnetClient);
-    const telnetBroadcaster = new TelnetBroadcaster(telnetClient);
-
-    const mqttListener = new MqttListener({
-      ...MqttListener.DefaultOptions,
-      client: mqttClient,
-      broadcaster: telnetBroadcaster,
-    });
-
-    const mqttBroadcaster = new MqttBroadcaster({
-      ...MqttBroadcaster.DefaultOptions,
-      client: mqttClient,
-    });
-
-    mqttClient.on('error', (err) => {
-      console.error(err);
-      process.exit();
-    });
-
-    console.debug('Connected to MQTT');
-
-    await mqttListener.listen();
-
-    telnetListener.addHandler(new StateParser(mqttBroadcaster));
-
-    await telnetBroadcaster.init();
-
-    while (true) {
-      await telnetListener.read();
-    }
   }
 
   static handleExit(callback: () => void) {

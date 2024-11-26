@@ -1,39 +1,64 @@
+import { MainParser, ReceiverSettings, ReceiverState, ZoneParser } from 'denon-state-manager';
 import { Telnet } from 'telnet-client';
 
-export interface ICommandHandler {
-  handle: (data: string | null) => Promise<boolean>;
-}
+import { MqttUpdate } from './MqttUpdate';
+import { MqttBroadcaster } from './MqttBroadcaster';
+import { MqttManager } from './MqttManager';
 
 export class TelnetListener {
   private client: Telnet;
-  private handlers: Array<ICommandHandler> = [];
+  private parsers: Array<MainParser | ZoneParser> = [];
+  private states: ReceiverState[] = [];
 
-  constructor(client: Telnet) {
+  constructor(client: Telnet, zones: number) {
     this.client = client;
+
+    for (let i = 0; i < zones; i++) {
+      this.AddZone();
+    }
   }
 
-  public addHandler(handler: ICommandHandler): void {
-    this.handlers.push(handler);
+  public AddZone() {
+    const state = new ReceiverState();
+    this.states.push(state);
+
+    if (this.parsers.length === 0) {
+      this.parsers.push(new MainParser(state));
+    } else {
+      this.parsers.push(new ZoneParser(state, `Z${this.states.length}`));
+    }
   }
 
-  async read(): Promise<void> {
+  public handle(data: string): MqttUpdate | undefined {
+    for (let zone = 1; zone <= this.parsers.length; zone++) {
+      const result = this.parsers[zone - 1].parse(data);
+      if (result.handled && result.value) {
+        return {
+          key: result.key ?? ReceiverSettings.None,
+          value: result.value,
+          zone,
+        };
+      }
+    }
+  }
+
+  async read(mqttManager: MqttManager): Promise<void> {
     try {
       const data = await this.client.nextData();
       const lines = data?.split('\r') ?? [];
 
-      for (const line of lines) {
-        let handled = false;
+      for await (const line of lines) {
         if (line !== '') {
-          for await (const handler of this.handlers) {
-            console.debug('Received:', line);
-            handled = await handler.handle(line);
-            if (handled) {
-              break;
-            }
+          console.debug('Received:', line);
+          const result = this.handle(line);
+          if (result) {
+            await mqttManager.publish(result);
+            const state = this.states[result.zone - 1];
+            state.updateState(result.key, result.value);
+            await mqttManager.publishState(state, result.zone);
+          } else {
+            console.debug('Unhandled:', line);
           }
-        }
-        if (!handled && line != '') {
-          console.debug('Unhandled:', line);
         }
       }
     } catch (err) {
