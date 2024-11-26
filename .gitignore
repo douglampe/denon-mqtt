@@ -4,3 +4,4 @@ dist/
 coverage/
 ha-config/*
 !ha-config/configuration.yaml
+receivers.json
