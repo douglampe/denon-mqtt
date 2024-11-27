@@ -4,4 +4,9 @@ dist/
 coverage/
 ha-config/*
 !ha-config/configuration.yaml
+!ha-config/fan
+!ha-config/media_player
+!ha-config/select
+!ha-config/sensor
+!ha-config/switch
 receivers.json
