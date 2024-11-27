@@ -1,3 +1,4 @@
+# HACK: Use 18 because newer versions hang in QEMU during npm install
 FROM node:18-alpine AS build
 
 COPY . /app
