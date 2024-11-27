@@ -1,8 +1,8 @@
-FROM node:22-alpine AS build
+FROM node:18-alpine AS build
 
 COPY . /app
 WORKDIR /app
-RUN npm i --verbose --no-audit
+RUN npm i --verbose
 RUN npm run build
 
 FROM node:22-alpine
