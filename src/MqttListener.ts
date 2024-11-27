@@ -29,7 +29,7 @@ export class MqttListener {
     console.debug(`Listening to topic ${topic}`);
   }
 
-  public async listen(cb: (command: string) => Promise<void>) {
+  public async listen() {
     for (let i = 1; i <= this.options.receiver.options.zones.length; i++) {
       const zone = this.options.receiver.options.zones[i - 1];
 
@@ -50,14 +50,14 @@ export class MqttListener {
       console.debug(`MQTT Message on topic ${topic}:`, body);
 
       if (topic === this.getTopic('device', 'none', 1) && body === 'REFRESH') {
-        await this.handleMessage(ReceiverSettings.None, 'REFRESH', 1, cb);
+        await this.handleMessage(ReceiverSettings.None, 'REFRESH', 1);
         return;
       }
 
       const config = this.listenerConfigs[topic];
 
       if (config) {
-        this.handleMessage(config.command, body, config.zone, cb)
+        this.handleMessage(config.command, body, config.zone)
           .then()
           .catch((error) => console.error(error));
       } else {
@@ -66,13 +66,13 @@ export class MqttListener {
     });
   }
 
-  async handleMessage(command: ReceiverSettings, body: string, zone: number, cb: (command: string) => Promise<void>) {
+  async handleMessage(command: ReceiverSettings, body: string, zone: number) {
     const value = JSON.parse(body) as StateValue;
 
     const avrCommand = zone === 1 ? MessageFormatter.getCommand(command, value) : MessageFormatter.getCommand(command, value, zone);
 
     if (avrCommand) {
-      await cb(avrCommand);
+      await this.options.receiver.send(avrCommand);
     } else {
       console.debug(`No message translation found for command ${ReceiverSettings[command]} for zone ${zone} or error parsing value:`, value);
     }

@@ -1,3 +1,4 @@
+import { ReceiverState } from 'denon-state-manager';
 import { connectAsync, MqttClient } from 'mqtt/*';
 
 import { MqttBroadcaster } from './MqttBroadcaster';
@@ -5,7 +6,6 @@ import { MqttListener } from './MqttListener';
 import { MqttUpdate } from './MqttUpdate';
 import { ReceiverConfig } from './ReceiverConfig';
 import { ReceiverManager } from './ReceiverManager';
-import { ReceiverState } from 'denon-state-manager';
 
 export interface MqttManagerOptions {
   host: string;
@@ -38,7 +38,7 @@ export class MqttManager {
       client: this.mqttClient,
       receiver,
     });
-    await mqttListener.listen(receiver.send);
+    await mqttListener.listen();
   }
 
   publish(update: MqttUpdate) {
