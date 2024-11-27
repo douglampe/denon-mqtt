@@ -5,7 +5,7 @@
   "main": "dist/entryPoint.js",
   "scripts": {
     "build": "rimraf dist && tsc --project tsconfig.json",
-    "start": "node dist/entryPoint.js",
+    "start": "node bin/denon-mqtt-cli.js -f receivers.json -m mosquitto",
     "dev": "ts-node src/entryPoint.ts",
     "dev:file": "ts-node src/entryPoint.ts -f receivers.json",
     "lint": "eslint src --fix --ext .ts",

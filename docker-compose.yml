@@ -28,3 +28,8 @@ services:
       - "80:80"
       - "8300:8300"
       - "51827:51827"
+  denon-mqtt:
+    container_name: denon-mqtt
+    image: denon-mqtt:dev
+    volumes:
+      - ./receivers.json:/app/receivers.json
