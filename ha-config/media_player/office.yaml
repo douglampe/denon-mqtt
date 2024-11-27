@@ -1,0 +1,69 @@
+
+  - platform: universal
+    name: Office Audio
+    object_id: denon_office_avr
+    commands:
+      turn_on:
+        action: switch.turn_on
+        target:
+          entity_id: switch.denon_office_main_zone_power
+      turn_off:
+        action: switch.turn_off
+        target:
+          entity_id: switch.denon_office_main_zone_power
+      volume_up:
+        action: switch.turn_on
+        target:
+          entity_id: switch.denon_office_main_zone_volume_up_down
+      volume_down:
+        action: switch.turn_off
+        target:
+          entity_id: switch.denon_office_main_zone_volume_up_down
+      volume_mute:
+        action: switch.turn_on
+        target:
+          entity_id: switch.denon_office_main_zone_mute
+      volume_set:
+        action: fan.set_percentage
+        target:
+          entity_id: fan.denon_office_main_zone_volume
+        data:
+          volume_level: "{{ volume_level }}"
+    attributes:
+      state: switch.denon_office_main_zone_power
+      is_volume_muted: '{{ switch.denon_office_main_zone_mute.state == "ON" }}'
+      source_list: select.denon_office_main_zone_source|options
+      source: state.select.denon_office_main_zone_source.state
+  - platform: universal
+    name: Office Zone2 Audio
+    object_id: denon_office_avr_zone2
+    commands:
+      turn_on:
+        action: switch.turn_on
+        target:
+          entity_id: switch.denon_office_zone2_power
+      turn_off:
+        action: switch.turn_off
+        target:
+          entity_id: switch.denon_office_zone2_power
+      volume_up:
+        action: switch.turn_on
+        target:
+          entity_id: switch.denon_office_zone2_volume_up_down
+      volume_down:
+        action: switch.turn_off
+        target:
+          entity_id: switch.denon_office_zone2_volume_up_down
+      volume_mute:
+        action: switch.turn_on
+        target:
+          entity_id: switch.denon_office_zone2_mute
+      volume_set:
+        action: fan.set_percentage
+        target:
+          entity_id: fan.denon_office_zone2_volume
+        data:
+          volume_level: "{{ volume_level }}"
+    attributes:
+      state: switch.denon_office_zone2_power
+      is_volume_muted: '{{ switch.denon_office_zone2_mute.state == "ON" }}'
