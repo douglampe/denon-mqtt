@@ -1,4 +1,3 @@
-
   - platform: universal
     name: Office Audio
     object_id: denon_office_avr
@@ -22,16 +21,17 @@
       volume_mute:
         action: switch.turn_on
         target:
-          entity_id: switch.denon_office_main_zone_mute
+          entity_id: switch.denon_office_main_zone_mute_toggle
       volume_set:
         action: fan.set_percentage
         target:
           entity_id: fan.denon_office_main_zone_volume
         data:
-          volume_level: "{{ volume_level }}"
+          volume_level: "{{ (volume_level | float)*100 }}"
     attributes:
       state: switch.denon_office_main_zone_power
-      is_volume_muted: '{{ switch.denon_office_main_zone_mute.state == "ON" }}'
+      is_volume_muted: switch.denon_office_main_zone_mute
+      volume_level: sensor.denon_office_main_zonee_volume_percent
       source_list: select.denon_office_main_zone_source|options
       source: state.select.denon_office_main_zone_source.state
   - platform: universal
@@ -57,13 +57,13 @@
       volume_mute:
         action: switch.turn_on
         target:
-          entity_id: switch.denon_office_zone2_mute
+          entity_id: switch.denon_office_zone2_mute_toggle
       volume_set:
         action: fan.set_percentage
         target:
           entity_id: fan.denon_office_zone2_volume
         data:
-          volume_level: "{{ volume_level }}"
+          volume_level: "{{ (volume_level | float)*100 }}"
     attributes:
       state: switch.denon_office_zone2_power
-      is_volume_muted: '{{ switch.denon_office_zone2_mute.state == "ON" }}'
+      is_volume_muted: switch.denon_office_zone2_mute

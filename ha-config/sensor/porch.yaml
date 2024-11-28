@@ -1,0 +1,8 @@
+    - name: "Porch Audio State"
+      object_id: denon_zone3_state
+      state_topic: "denon/switch/denon_zone3_power/state"
+      json_attributes_topic: "denon/sensor/denon_zone3_state/state"
+    - name: "Porch Audio Volume Percent"
+      object_id: denon_zone3_volume_percent
+      state_topic: "denon/volume/denon_zone3_volume/state"
+      value_template: "{{ (value | float)*0.01 }}"
