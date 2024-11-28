@@ -16,3 +16,21 @@
         - "PHONO"
         - "TUNER"
         - "NET"
+    - name: "Office Zone2 Input"
+      object_id: denon_office_zone2_source
+      command_topic: "denon/select/denon_office_zone2_source/command"
+      command_template: '{ "text": "{{ value}}" }'
+      state_topic: "denon/select/denon_office_zone2_source/state"
+      options:
+        - "SAT/CBL"
+        - "DVD"
+        - "BD"
+        - "GAME"
+        - "MPLAY"
+        - "TV"
+        - "AUX1"
+        - "AUX2"
+        - "CD"
+        - "PHONO"
+        - "TUNER"
+        - "NET"

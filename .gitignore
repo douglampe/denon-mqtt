@@ -9,4 +9,5 @@ ha-config/*
 !ha-config/select
 !ha-config/sensor
 !ha-config/switch
+!ha-config/README.md
 receivers.json
