@@ -25,6 +25,10 @@ export class MqttListener {
     const topic = this.getTopic(component, ReceiverSettings[command].toLowerCase(), zone);
     this.listenerConfigs[topic] = { command, zone };
 
+    await this.listenToTopic(topic);
+  }
+
+  public async listenToTopic(topic: string) {
     await this.options.client.subscribeAsync(topic);
     console.debug(`Listening to topic ${topic}`);
   }
@@ -36,7 +40,7 @@ export class MqttListener {
       console.debug(`Configuring receiver ${this.options.receiver.options.name} zone ${zone}`);
 
       const promises = [];
-      promises.push(this.listenToZone('device', ReceiverSettings.None, i));
+      promises.push(this.listenToTopic(`${this.options.prefix}/device/command`));
       promises.push(this.listenToZone('switch', ReceiverSettings.Power, i));
       promises.push(this.listenToZone('switch', ReceiverSettings.Mute, i));
       promises.push(this.listenToZone('select', ReceiverSettings.Source, i));
@@ -49,8 +53,8 @@ export class MqttListener {
       const body = message.toString();
       console.debug(`MQTT Message on topic ${topic}:`, body);
 
-      if (topic === this.getTopic('device', 'none', 1) && body === 'REFRESH') {
-        await this.handleMessage(ReceiverSettings.None, 'REFRESH', 1);
+      if (topic === `${this.options.prefix}/device/command` && body === 'REFRESH') {
+        await this.options.receiver.query();
         return;
       }
 
