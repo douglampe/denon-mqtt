@@ -34,8 +34,8 @@ export class ReceiverManager {
     this.broadcaster = new TelnetBroadcaster(telnetClient);
   }
 
-  public async start() {
-    await this.broadcaster.init();
+  public async query() {
+    await this.broadcaster.query();
   }
 
   public async read() {

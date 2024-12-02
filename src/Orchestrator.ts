@@ -61,7 +61,7 @@ export class Orchestrator {
 
     await receiverManager.connect();
 
-    await receiverManager.start();
+    await receiverManager.query();
   }
 
   async start() {

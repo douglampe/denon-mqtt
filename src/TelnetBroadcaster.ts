@@ -12,34 +12,9 @@ export class TelnetBroadcaster {
     }
   }
 
-  async init(): Promise<void> {
-    await this.send('SI?');
-    await this.send('PW?');
-    await this.send('MV?');
-    await this.send('CV?');
-    await this.send('MU?');
-    await this.send('ZM?');
-    await this.send('SR?');
-    await this.send('SD?');
-    await this.send('DC?');
-    await this.send('SV?');
-    await this.send('SLP?');
-    await this.send('MS?');
-    await this.send('Z2?');
-    await this.send('Z2MU?');
-    await this.send('Z2CS?');
-    await this.send('Z2CV?');
-    await this.send('Z2HPF?');
-    await this.send('Z2QUICK ?');
-    await this.send('Z3?');
-    await this.send('Z3MU?');
-    await this.send('Z3CS?');
-    await this.send('Z3CV?');
-    await this.send('Z3HPF?');
-    await this.send('Z3QUICK ?');
-    await this.send('SSSPC ?');
-    await this.send('PSCLV ?');
-    await this.send('PSSWL ?');
-    await this.send('SSLEV ?');
+  async query(): Promise<void> {
+    await this.send(
+      'SI?\rPW?\rMV?\rCV?\rMU?\rZM?\rSR?\rSD?\rDC?\rSV?\rSLP?\rMS?\rZ2?\rZ2MU?\rZ2CS?\rZ2CV?\rZ2HPF?\rZ2QUICK ?\rZ3?\rZ3MU?\rZ3CS?\rZ3CV?\rZ3HPF?\rZ3QUICK ?\rSSSPC ?\rPSCLV ?\rPSSWL ?\rSSLEV ?',
+    );
   }
 }
