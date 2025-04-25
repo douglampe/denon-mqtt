@@ -1,6 +1,6 @@
 {
   "name": "denon-mqtt",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "MQTT Provider for Denon Receivers",
   "main": "dist/entryPoint.js",
   "scripts": {
@@ -14,6 +14,9 @@
     "test:nocover": "jest --config jest.json --detectOpenHandles",
     "test:one": "jest --config jest-one.json --detectOpenHandles"
   },
+  "files": [
+    "dist/**/*"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/douglampe/denon-mqtt.git"

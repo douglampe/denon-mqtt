@@ -1,9 +1,9 @@
-name: Main Push
+name: Release
 
 on:
   push:
-    branches:
-      - '*'
+    tags:
+      - 'v*.*.*'
 
 jobs:
   build-and-publish:
@@ -31,11 +31,15 @@ jobs:
         run: yarn build
 
       - name: Publish Package
-        run: |
-          npm version prerelease --git-tag-version false --allow-same-version true --preid beta.${{ github.run_id }}
-          npm publish
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Get package version
+        shell: bash
+        run: |
+          echo "PACKAGE_VERSION=$(npm pkg get version --workspaces=false | tr -d \")" >> $GITHUB_ENV
+          echo "MAJOR_VERSION=$(echo "$PACKAGE_VERSION" | cut -d'.' -f1)" >> $GITHUB_ENV
 
       - name: Build and push Docker image
         id: push
@@ -45,4 +49,7 @@ jobs:
           file: ./Dockerfile
           push: true
           platforms: linux/amd64,linux/arm/v8,linux/arm64
-          tags: douglampe/denon-mqtt:dev
+          tags:
+            - douglampe/denon-mqtt:${PACKAGE_VERSION}
+            - douglampe/denon-mqtt:${MAJOR_VERSION}
+            - douglampe/denon-mqtt:latest
