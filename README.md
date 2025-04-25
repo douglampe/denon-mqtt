@@ -97,9 +97,7 @@ yarn global add denon-mqtt
 npm i -g denon-mqtt
 
 # Run:
-yarn denon-mqtt
-# OR
-npm run denon-mqtt
+denon-mqtt
 ```
 
 ### Run with Docker
