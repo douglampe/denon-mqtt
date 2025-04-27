@@ -46,8 +46,9 @@ jobs:
             douglampe/denon-mqtt:${{ steps.getVersion.outputs.PACKAGE_VERSION }}
             douglampe/denon-mqtt:${{ steps.getVersion.outputs.MAJOR_VERSION }}
             douglampe/denon-mqtt:latest
-            - name: Install Dependencies
-            run: yarn install --frozen-lockfile
+
+      # - name: Install Dependencies
+      #   run: yarn install --frozen-lockfile
 
       # - name: Build
       #   run: yarn build
