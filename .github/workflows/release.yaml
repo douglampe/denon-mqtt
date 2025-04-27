@@ -2,8 +2,10 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    # tags:
+    #   - 'v*.*.*'
+    branches:
+      - '*'
 
 jobs:
   build-and-publish:
@@ -24,22 +26,6 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Install Dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Build
-        run: yarn build
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '22.x'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Publish Package
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Get package version
         shell: bash
         run: |
@@ -55,6 +41,21 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm/v8,linux/arm64
           tags: |
-            douglampe/denon-mqtt:${PACKAGE_VERSION}
-            douglampe/denon-mqtt:${MAJOR_VERSION}
+            douglampe/denon-mqtt:${{ PACKAGE_VERSION }}
+            douglampe/denon-mqtt:${{ MAJOR_VERSION }}
             douglampe/denon-mqtt:latest
+            - name: Install Dependencies
+            run: yarn install --frozen-lockfile
+
+      # - name: Build
+      #   run: yarn build
+
+      # - uses: actions/setup-node@v3
+      #   with:
+      #     node-version: '22.x'
+      #     registry-url: 'https://registry.npmjs.org'
+
+      # - name: Publish Package
+      #   run: npm publish
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
