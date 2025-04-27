@@ -3,7 +3,7 @@ FROM node:18-alpine AS build
 
 COPY . /app
 WORKDIR /app
-RUN npm ci
+RUN npm i
 RUN npm run build
 
 FROM node:22-alpine
