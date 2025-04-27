@@ -27,10 +27,11 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Get package version
+        id: getVersion
         shell: bash
         run: |
-          echo "PACKAGE_VERSION=$(npm pkg get version --workspaces=false | tr -d \")" >> $GITHUB_ENV
-          echo "MAJOR_VERSION=$(echo "$PACKAGE_VERSION" | cut -d'.' -f1)" >> $GITHUB_ENV
+          echo "PACKAGE_VERSION=$(npm pkg get version --workspaces=false | tr -d \")" >> $GITHUB_OUTPUT
+          echo "MAJOR_VERSION=$(echo "$PACKAGE_VERSION" | cut -d'.' -f1)" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         id: push
@@ -41,8 +42,8 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm/v8,linux/arm64
           tags: |
-            douglampe/denon-mqtt:${{ PACKAGE_VERSION }}
-            douglampe/denon-mqtt:${{ MAJOR_VERSION }}
+            douglampe/denon-mqtt:${{ steps.getVersion.outputs.PACKAGE_VERSION }}
+            douglampe/denon-mqtt:${{ steps.getVersion.outputs.MAJOR_VERSION }}
             douglampe/denon-mqtt:latest
             - name: Install Dependencies
             run: yarn install --frozen-lockfile
