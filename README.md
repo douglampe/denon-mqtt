@@ -100,6 +100,25 @@ npm i -g denon-mqtt
 denon-mqtt
 ```
 
+### Command Line Options
+
+Options:
+
+```
+  -i, --info                 Display current version number
+  -f, --file <file>          Get configuration from JSON file
+  -m, --mqtt <url>           MQTT URL (default: "localhost")
+  -u, --username <username>  MQTT Username (default: "user")
+  -p, --password <password>  MQTT Password (default: "password")
+  --port                     MQTT Port <port>
+  --prefix                   MQTT Topic Prefix <prefix>
+  -a, --avr <list>           Comma-separated list of AVR IP addresses
+  --name <list>              Comma-separated list of AVR friendly names (default: "Home Theater")
+  --id <list>                Comma-separated list of AVR unique IDs (default: "denon")
+  --zones <list>             Comma-separated list of | separated AVR zone names (default: "Main|Zone 2")
+  -h, --help                 display help for command
+```
+
 ### Run with Docker
 
 Docker run:
@@ -119,24 +138,18 @@ services:
       - ./receivers.json:/app/receivers.json
 ```
 
-### Command Line Options
+Environment variables supported for setting parameters in Docker container:
 
-Options:
-
-```
-  -i, --info                 Display current version number
-  -f, --file <file>          Get configuration from JSON file
-  -m, --mqtt <url>           MQTT URL (default: "localhost")
-  -u, --username <username>  MQTT Username (default: "user")
-  -p, --password <password>  MQTT Password (default: "password")
-  --port                     MQTT Port <port>
-  --prefix                   MQTT Topic Prefix <prefix>
-  -a, --avr <list>           Comma-separated list of AVR IP addresses
-  --name <list>              Comma-separated list of AVR friendly names (default: "Home Theater")
-  --id <list>                Comma-separated list of AVR unique IDs (default: "denon")
-  --zones <list>             Comma-separated list of | separated AVR zone names (default: "Main|Zone 2")
-  -h, --help                 display help for command
-```
+- `DMQTT_FILE`: config JSON file
+- `DMQTT_HOST`: MQTT URL (default: "localhost")
+- `DMQTT_USER`: MQTT Username (default: "user")
+- `DMQTT_PASSWORD`: MQTT Password (default: "password")
+- `DMQTT_PORT`: MQTT Port <port>
+- `DMQTT_PREFIX`: MQTT Topic Prefix <prefix>
+- `DMQTT_IP`: Comma-separated list of AVR IP addresses
+- `DMQTT_NAME`: Comma-separated list of AVR friendly names (default: "Home Theater")
+- `DMQTT_ID`: Comma-separated list of AVR unique IDs (default: "denon")
+- `DMQTT_ZONES`: Comma-separated list of | separated AVR zone names (default: "Main|Zone 2")
 
 ### Running MQTT
 
