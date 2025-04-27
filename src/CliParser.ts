@@ -23,16 +23,16 @@ export class CliParser {
     program.name(options.name).version(options.version, '-i, --info', 'Display current version number');
 
     program
-      .option('-f, --file <file>', 'Get configuration from JSON file')
-      .option('-m, --mqtt <url>', 'MQTT URL', 'localhost')
-      .option('-u, --username <username>', 'MQTT Username', 'user')
-      .option('-p, --password <password>', 'MQTT Password', 'password')
-      .option('--port', 'MQTT Port <port>', '1883')
-      .option('--prefix', 'MQTT Topic Prefix <prefix>', 'denon')
-      .option('-a, --avr <list>', 'Comma-separated list of AVR IP addresses')
-      .option('--name <list>', 'Comma-separated list of AVR friendly names', 'Home Theater')
-      .option('--id <list>', 'Comma-separated list of AVR unique IDs', 'denon')
-      .option('--zones <list>', 'Comma-separated list of | separated AVR zone names', 'Main|Zone 2')
+      .option('-f, --file <file>', 'Get configuration from JSON file', process.env.DMQTT_FILE)
+      .option('-m, --mqtt <url>', 'MQTT URL', process.env.DMQTT_HOST ?? 'localhost')
+      .option('-u, --username <username>', 'MQTT Username', process.env.DMQTT_USER ?? 'user')
+      .option('-p, --password <password>', 'MQTT Password', process.env.DMQTT_PASSWORD ?? 'password')
+      .option('--port', 'MQTT Port <port>', process.env.DMQTT_PORT ?? '1883')
+      .option('--prefix', 'MQTT Topic Prefix <prefix>', process.env.DMQTT_PREFIX ?? 'denon')
+      .option('-a, --avr <list>', 'Comma-separated list of AVR IP addresses', process.env.DMQTT_IP)
+      .option('--name <list>', 'Comma-separated list of AVR friendly names', process.env.DMQTT_NAME ?? 'Home Theater')
+      .option('--id <list>', 'Comma-separated list of AVR unique IDs', process.env.DMQTT_ID ?? 'denon')
+      .option('--zones <list>', 'Comma-separated list of | separated AVR zone names', process.env.DMQTT_ZONES ?? 'Main|Zone 2')
       .action(CliParser.start);
 
     await program.parseAsync(options.args);
