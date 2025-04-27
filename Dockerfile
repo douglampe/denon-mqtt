@@ -3,8 +3,8 @@ FROM node:18-alpine AS build
 
 COPY . /app
 WORKDIR /app
-RUN yarn install --frozen-lockfile
-RUN yarn build
+RUN npm ci
+RUN npm run build
 
 FROM node:22-alpine
 COPY --from=build /app/dist /app/dist
