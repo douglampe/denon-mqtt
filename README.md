@@ -86,7 +86,7 @@ Theater" is the configuration for a Denon X4500H and "Office" is the configurati
 ]
 ```
 
-### Install with yarn orn npm
+### Install with yarn or npm
 
 This method requires [installing Node.js first](https://nodejs.org/en/download).
 
@@ -169,12 +169,110 @@ services:
       - ./mosquitto-users.txt:/mosquitto/config/mosquitto-users.txt
 ```
 
+## MQTT Syntax
+
+In addition to the below topics and payloads, you can request updated status data from the receiver by posting a text
+payload of `REFRESH` to topic `{prefix}/device/command`. Note that this command will requery all configured receivers.
+
+### Command Topics
+
+The following topics are supported. In each topic name below, `{prefix}` is the global prefix (default: `denon`) and 
+`{zone}` is the zone identifier (`main_zone`, `zone1`, `zone2`).
+
+- `{prefix}/switch/{zone}_power/command`
+- `{prefix}/switch/{zone}_mute/command`
+- `{prefix}/volume/{zone}_volume/command`
+- `{prefix}/select/{zone}_source/command`
+
+### Command Payloads
+
+The following payloads formats are required for each command topics:
+
+- power: `{ text: "value" }` where `value` is `ON` or `OFF`
+- mute: `{ text: "value" }` where `value` is `ON` or `OFF`
+- volume: `{ numeric: value }` where `value` is between 1 and the max volume set for the AVR
+- source: `{ text: "value" }` where `value` is a valid source identifier (ex: `BD`, `CD`, `DVD`, `AUX1`, `AUX2`)
+
+### State Topics
+
+NOTE: While the interface maintains state based on the latest messages received from the AVR, it is possible that not
+all states will always be available.
+
+The messages are published to the following topics each time a related command is received from the receiver:
+
+- `{prefix}/switch/{zone}_power/state`
+- `{prefix}/switch/{zone}_mute/state`
+- `{prefix}/volume/{zone}_volume/state`
+- `{prefix}/select/{zone}_source/state`
+- `{prefix}/select/{zone}_state/state`
+
+### State Payloads
+
+The following text (**NOT** JSON) payloads are published when the interface receives a related command from the receiver:
+
+- power: `ON`|`OFF`
+- mute: `ON`|`OFF`
+- volume: 2-digit number (ex: `01`)
+- source: valid source identifier (ex: `BD`, `CD`, `DVD`, `AUX1`, `AUX2`)
+
+The state topic publishes the full comprehensive state of the AVR in JSON format as an object of key/value pairs. The
+following keys are supported:
+
+- ChannelSetting
+- ChannelVolume
+- DigitalInput
+- ECOMode
+- MainPower
+- MaxVolume
+- Mute
+- Parameters
+- Power
+- SD
+- Sleep
+- Source
+- SSLevels
+- SSSpeakers
+- Standby
+- SurroundMode
+- VideoSelect
+- VideoSelectSource
+- HPF
+- QuickSelect
+- Volume
+
+For settings that support multiple parameters (`ChannelVolume`, `Parameters`, `SSLevels`, etc.), the value will be a 
+JSON object with multiple key/value pairs with text format for all values. `Volume` and `MaxVolume` values are numeric
+(integer). All other values are text.
+
+For example, the following is a valid main zone status payload:
+
+```json
+{
+  "ChannelVolume": { "FL":"50", "FR":"50", "C":"50", "SL":"50", "SR":"50" },
+  "DigitalInput": "AUTO",
+  "MainPower": "ON",
+  "MaxVolume": 98,
+  "Mute": "OFF",
+  "Parameters": { "DRC": "OFF", "LFE": "00", "BAS": "50", "TRE": "50", "TONE CTRL": "OFF", "CLV": "50", "SWL": "50" },
+  "Power": "ON",
+  "SD": "AUTO",
+  "Sleep": "OFF",
+  "Source": "SAT/CBL",
+  "SSLevels": { "C": "50", "FL": "50", "FR": "50", "SL": "50", "SR": "50", "SBL": "50", "SBR": "50" },
+  "SSSpeakers": { "FRO": "LAR", "CEN": "SMA", "SUA": "SMA", "SBK": "2SP", "FRH": "NON", "TFR": "NON", "TPM": "NON",
+    "FRD": "NON", "SUD": "NON", "TPR": "NON", "RHE": "NON", "BKD": "NON", "SHE": "NON", "TPS": "NON", "SWF": "NON" },
+  "SurroundMode": "DOLBY AUDIO-DD+ +DSUR",
+  "VideoSelect": "OFF",
+  "Volume": 51
+}
+```
+
 ## Contributing
 
 ### Clone the repository
 
 ```bash
-git clone https://github.com/douglampe/denon-state-manager.git
+git clone https://github.com/douglampe/denon-mqtt.git
 ```
 
 ### Install dependencies
