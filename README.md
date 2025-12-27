@@ -86,7 +86,7 @@ Theater" is the configuration for a Denon X4500H and "Office" is the configurati
 ]
 ```
 
-### Install with yarn orn npm
+### Install with yarn or npm
 
 This method requires [installing Node.js first](https://nodejs.org/en/download).
 
