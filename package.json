@@ -32,7 +32,7 @@
   "homepage": "https://github.com/douglampe/denon-mqtt#readme",
   "dependencies": {
     "commander": "^12.1.0",
-    "denon-state-manager": "0.0.3-beta.12015539563.0",
+    "denon-state-manager": "0.0.3",
     "dotenv": "^16.3.1",
     "mqtt": "^5.1.4",
     "telnet-client": "^2.1.0"

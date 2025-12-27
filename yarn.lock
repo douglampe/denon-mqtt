@@ -1304,10 +1304,10 @@ delayed-stream@~1.0.0:
   resolved "https://registry.yarnpkg.com/delayed-stream/-/delayed-stream-1.0.0.tgz#df3ae199acadfb7d440aaae0b29e2272b24ec619"
   integrity sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==
 
-denon-state-manager@0.0.3-beta.12015539563.0:
-  version "0.0.3-beta.12015539563.0"
-  resolved "https://registry.yarnpkg.com/denon-state-manager/-/denon-state-manager-0.0.3-beta.12015539563.0.tgz#fce1eb80f9b66a0c68750d101ccd2de72cf206f6"
-  integrity sha512-S6wLLsZcbiBnrF1gKC6HLABMhNIwIIFqTTbsYRmV83GmK59AmV0d6WiDNNHeFERQ9H3N9JtiCx8zgN6FKYZsHg==
+denon-state-manager@0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/denon-state-manager/-/denon-state-manager-0.0.3.tgz#792d61d5a2627a3ccb6ff1f97c1f34d9212e73dd"
+  integrity sha512-H8xI6gBs/J28am1QCS8OJQBxqizLAbTpg0SKf1DlfrTcQ56NmsfTLijqcuGkXsf6SnQ70SX9HhgFMHRR0WdI2Q==
   dependencies:
     axios "^1.7.7"
     node-fetch "^3.3.2"
