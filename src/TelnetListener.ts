@@ -14,11 +14,11 @@ export class TelnetListener {
     this.client = client;
 
     for (let i = 0; i < zones; i++) {
-      this.AddZone();
+      this.addZone();
     }
   }
 
-  public AddZone() {
+  public addZone() {
     const state = new ReceiverState();
     this.states.push(state);
 
