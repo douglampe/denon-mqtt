@@ -14,11 +14,10 @@ jest.mock('mqtt', () => {
 jest.mock('telnet-client', () => {
   return {
     Telnet: jest.fn(),
-  }
+  };
 });
 
 describe('MqttListener', () => {
-
   beforeEach(() => {
     jest.resetAllMocks();
   });
@@ -52,10 +51,7 @@ describe('MqttListener', () => {
         id: 'denon',
         receiver: receiverConfig,
       });
-      const receiver = new ReceiverManager(
-        receiverConfig,
-        mqttManager
-      )
+      const receiver = new ReceiverManager(receiverConfig, mqttManager);
       const listener = new MqttListener({
         prefix: 'denon',
         id: 'denon',
