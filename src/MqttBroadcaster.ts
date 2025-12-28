@@ -63,8 +63,9 @@ export class MqttBroadcaster {
         break;
     }
 
-    if (message === '') {
-      throw new Error(`Could not parse message payload from value for setting ${ReceiverSettings[key]}: ${JSON.stringify(update.value)}`);
+    if ((message ?? '') === '') {
+      console.error(`Could not parse message payload from value for setting ${ReceiverSettings[key]}: ${JSON.stringify(update.value)}`);
+      return;
     }
 
     if (component && message) {
