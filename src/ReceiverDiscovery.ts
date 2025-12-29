@@ -103,7 +103,7 @@ export class ReceiverDiscovery {
 
             if (display && index) {
               zone.sources.push(index);
-              const source = this.config.sources.find((s) => s.display === display);
+              const source = this.config.sources.find((s) => s.index === index);
               if (source) {
                 source.display = display;
               } else this.config.sources.push({ index, display, code: 'UNKNOWN' });
@@ -116,10 +116,11 @@ export class ReceiverDiscovery {
 
   async discoverSourceCodes(selectedSources: string[]) {
     const selected = selectedSources[0];
+    const firstSource = this.config.sources.find((s) => s.index === this.config.zones[0].sources[0]);
 
     // Change source if it is already the first source.
-    if (this.config.sources[0].display === selected) {
-      console.debug('Changing source from first source prior to scanning...');
+    if (firstSource?.display === selected) {
+      console.debug('Changing source in order to change back and detect code...');
 
       await Promise.all([this.waitForReponse('SI'), this.setSource(this.config.zones[0].sources[1])]);
     }
@@ -142,19 +143,28 @@ export class ReceiverDiscovery {
       await this.setSource(selectedSource.index);
     }
 
-    // Get last source for zone 2 which should be zone 1 output (SOURCE)
     if (this.config.zones.length > 1) {
+      // Change source if it is already the last source for zone 2.
       const zone2 = this.config.zones[1];
-      const lastZone2Source = zone2.sources[zone2.sources.length - 1];
+      const lastZone2Source = this.config.sources.find((s) => s.index === zone2.sources[zone2.sources.length - 1]);
 
-      await Promise.all([this.getSourceCode(lastZone2Source, 2), this.setSource(lastZone2Source, 2)]);
+      if (lastZone2Source) {
+        if (lastZone2Source?.display === selectedSources[1]) {
+          console.debug('Changing zone2 source in order to change back and detect code...');
 
-      const selectedZone2Source = this.config.sources.find((s) => s.display === selectedSources[1]);
+          await Promise.all([this.waitForReponse('Z2'), this.setSource(this.config.zones[1].sources[1], 2)]);
+        }
 
-      if (selectedZone2Source && selectedZone2Source.index !== lastZone2Source) {
-        console.debug(`Setting Zone 2 source back to ${selectedZone2Source.display}...`);
+        // Get last source for zone 2 which should be zone 1 output (SOURCE)
+        await Promise.all([this.getSourceCode(lastZone2Source?.index, 2), this.setSource(lastZone2Source.index, 2)]);
 
-        await this.setSource(selectedZone2Source.index);
+        const selectedZone2Source = this.config.sources.find((s) => s.display === selectedSources[1]);
+
+        if (selectedZone2Source && selectedZone2Source.index !== lastZone2Source.index) {
+          console.debug(`Setting Zone 2 source back to ${selectedZone2Source.display}...`);
+
+          await Promise.all([this.waitForReponse('Z2'), this.setSource(selectedZone2Source.index, 2)]);
+        }
       }
     }
 
@@ -181,17 +191,23 @@ export class ReceiverDiscovery {
       }
     }
 
+    console.debug('Current source selections:');
+    for (let i = 0; i < selectedSources.length; i++) {
+      console.debug(`Zone ${i + 1}: ${selectedSources[i]}`);
+    }
+
     return selectedSources;
   }
 
   async setSource(index: string, zone: number = 1) {
+    console.debug(`Setting zone ${zone} source to index ${index}`);
     const data = encodeURIComponent(`<Source zone="${zone}" index="${index}"></Source>`);
     const result = await fetch(`https://${this.config.ip}:10443/ajax/globals/set_config?type=7&data=${data}`);
 
     if (result.status !== 200) {
       await this.disconnect();
       console.error(result);
-      throw new Error(`Error setting source to index ${index}`);
+      throw new Error(`Error setting source to index ${index} for zone ${zone}`);
     }
   }
 
