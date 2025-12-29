@@ -95,6 +95,18 @@ describe('MqttListener', () => {
         name: 'Home Theater',
         id: 'denon',
         ip: '192.168.1.1234',
+        sources: [
+          {
+            display: 'DVD',
+            code: 'DVD',
+            index: '1',
+          },
+          {
+            display: 'CD',
+            code: 'CD',
+            index: '2',
+          },
+        ],
         zones: [
           {
             index: '1',
@@ -153,6 +165,18 @@ describe('MqttListener', () => {
         name: 'Home Theater',
         id: 'denon',
         ip: '192.168.1.1234',
+        sources: [
+          {
+            display: 'DVD',
+            code: 'DVD',
+            index: '1',
+          },
+          {
+            display: 'CD',
+            code: 'CD',
+            index: '2',
+          },
+        ],
         zones: [
           {
             index: '1',

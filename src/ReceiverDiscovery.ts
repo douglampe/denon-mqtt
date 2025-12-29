@@ -1,0 +1,226 @@
+import libxmljs from 'libxmljs';
+import { ReceiverConfig } from './ReceiverConfig';
+import { Telnet } from 'telnet-client';
+import { TelnetBroadcaster } from './TelnetBroadcaster';
+
+export class ReceiverDiscovery {
+  private config: ReceiverConfig;
+  private client: Telnet;
+
+  constructor(id: string, ip: string) {
+    this.config = {
+      id,
+      ip,
+      name: 'UNKNOWN',
+      sources: [],
+      zones: [],
+    };
+  }
+
+  public async init() {
+    this.client = new Telnet();
+
+    await this.client.connect({
+      host: this.config.ip,
+      negotiationMandatory: false,
+      timeout: 5000,
+      irs: '\r',
+      ors: '\r',
+      sendTimeout: undefined,
+    });
+  }
+
+  public async disconnect() {
+    await this.client.destroy();
+  }
+
+  public async discover() {
+    console.debug(`Discovering configuration for AVR at ${this.config.ip}`);
+
+    await this.discoverName();
+
+    await this.discoverZones();
+
+    await this.discoverSources();
+
+    const selectedSources = await this.getSelectedSources();
+
+    await this.init();
+
+    await this.discoverSourceCodes(selectedSources[0]);
+
+    await this.disconnect();
+
+    return this.config;
+  }
+
+  async discoverName() {
+    const friendlyName = await this.fetchAvrData(3);
+
+    const name = friendlyName.root()?.text();
+    if (name) {
+      this.config.name = name;
+    }
+  }
+
+  async discoverZones() {
+    const zoneNames = await this.fetchAvrData(6);
+
+    const zoneNamesRoot = zoneNames.root();
+
+    for (let i = 0; zoneNamesRoot && i < zoneNamesRoot.childNodes().length; i++) {
+      const name = zoneNamesRoot.child(i)?.text();
+
+      if (name) {
+        const zone = this.config.zones.find((z) => z.index === (i + 1).toString());
+        if (zone) {
+          zone.name = name;
+        } else {
+          this.config.zones.push({ index: (i + 1).toString(), name, sources: [] });
+        }
+      }
+    }
+  }
+
+  async discoverSources() {
+    const sourceList = await this.fetchAvrData(7);
+
+    const sourceListRoot = sourceList.root();
+
+    for (let i = 0; sourceListRoot && i < sourceListRoot.childNodes().length; i++) {
+      const zoneSources = sourceListRoot.child(i);
+
+      if (zoneSources) {
+        const zoneIndex = zoneSources?.getAttribute('zone')?.value();
+
+        const zone = this.config.zones.find((z) => z.index == zoneIndex);
+
+        if (zone) {
+          for (let j = 0; j < zoneSources?.childNodes().length; j++) {
+            const sourceXml = zoneSources?.child(j);
+            const display = sourceXml?.text();
+            const index = sourceXml?.getAttribute('index')?.value();
+
+            if (display && index) {
+              zone.sources.push(index);
+              const source = this.config.sources.find((s) => s.display === display);
+              if (source) {
+                source.display = display;
+              } else this.config.sources.push({ index, display, code: 'UNKNOWN' });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  async discoverSourceCodes(selected: string) {
+    // Change source if it is already the first source.
+    if (this.config.sources[0].display === selected) {
+      console.debug('Changing source from first source prior to scanning...');
+
+      await Promise.all([this.waitForReponse('SI'), this.setSource(this.config.zones[0].sources[1])]);
+    }
+
+    const mainZone = this.config.zones[0];
+    // Use main zone since source is an input for other zones but not main zone so will error if we try to set for main
+    for (let i = 0; i < mainZone.sources.length; i++) {
+      const source = this.config.sources.find((s) => s.index === mainZone.sources[i]);
+      if (source) {
+        console.debug(`Setting source to ${source.display} (index ${source.index})`);
+        await Promise.all([this.getSourceCode(source.index), this.setSource(source.index)]);
+      }
+    }
+
+    const selectedSource = this.config.sources.find((s) => s.display === selected);
+
+    if (selectedSource && selectedSource.index !== mainZone.sources[mainZone.sources.length - 1]) {
+      console.debug(`Setting source back to ${selectedSource.display}...`);
+
+      await this.setSource(selectedSource.index);
+    }
+
+    // Update soure zones from index to codes
+    for (const zone of this.config.zones) {
+      for (let i = 0; i < zone.sources.length; i++) {
+        const source = this.config.sources.find((s) => s.index === zone.sources[i]);
+        if (source) {
+          zone.sources[i] = source.code;
+        }
+      }
+    }
+  }
+
+  async getSelectedSources() {
+    const selectedSourcesXml = await this.fetchAvrData(1, 'home');
+    const selectedSources: string[] = [];
+
+    for (let i = 0; selectedSourcesXml && i < this.config.zones.length; i++) {
+      const name = selectedSourcesXml.child(i)?.child(1)?.text();
+
+      if (name) {
+        selectedSources.push(name);
+      }
+    }
+
+    return selectedSources;
+  }
+
+  async setSource(index: string) {
+    const data = encodeURIComponent(`<Source zone="1" index="${index}"></Source>`);
+    const result = await fetch(`https://${this.config.ip}:10443/ajax/globals/set_config?type=7&data=${data}`);
+
+    if (result.status !== 200) {
+      await this.disconnect();
+      console.error(result);
+      throw new Error(`Error setting source to index ${index}`);
+    }
+  }
+
+  async getSourceCode(index: string) {
+    const source = this.config.sources.find((s) => s.index === index);
+
+    if (source) {
+      const code = await this.waitForReponse('SI');
+
+      if (code) {
+        source.code = code.substring(2, code.length);
+      }
+    }
+  }
+
+  public async fetchAvrData(type: number, prefix: string = 'globals') {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+    const result = await fetch(`https://${this.config.ip}:10443/ajax/${prefix}/get_config?type=${type}`);
+
+    if (!result.ok) {
+      console.error(result);
+      throw new Error(`Error retrieving configuration for type ${type}.`);
+    }
+
+    const body = await result.text();
+    const xml = await libxmljs.parseXmlAsync(body);
+
+    return xml;
+  }
+
+  public async waitForReponse(prefix: string) {
+    let result: string | null = '';
+    let i = 0;
+    while (!result?.startsWith(prefix) && i++ < 100) {
+      const data = await this.client.nextData();
+      const lines = data?.substring(0, data.length - 1).split('\r');
+      for (let j = 0; !result?.startsWith(prefix) && lines && j < lines.length; j++) {
+        result = lines[j];
+      }
+    }
+
+    if (!result.startsWith(prefix)) {
+      throw new Error(`Error: No response received with prefix ${prefix}.`);
+    }
+
+    console.debug(`Received response: ${result}`);
+
+    return result;
+  }
+}
