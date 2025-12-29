@@ -1,6 +1,6 @@
 # denon-mqtt
 
-This project provides MQTT support Denon and Marantz Audio Video Receivers (AVRs). While it does not provide 100%
+This project provides MQTT support for Denon and Marantz Audio Video Receivers (AVRs). While it does not provide 100%
 compatibility with the protocol, it has been developed in line with documentation for version ("Application model")
 AVR-3312CI/AVR-3312 and version 0.06 of the specification for AVR-S700, S900, X1100, X3100, X4100, X5200, and X7200. It
 has been tested with the following receiver models:
@@ -10,8 +10,9 @@ has been tested with the following receiver models:
 
 ## Quick Start
 
-Note, you must have access to an MQTT server for this interface to work. See below for information on running MQTT via
-Docker.
+> [!NOTE]
+> Note: you must have access to an MQTT server for this interface to work (See below for information on running MQTT 
+> via Docker).
 
 ```bash
 # Create folder to store configuration:
@@ -90,8 +91,8 @@ Environment variables supported for setting parameters in Docker container:
 - `DMQTT_HOST`: MQTT URL (default: "localhost")
 - `DMQTT_USER`: MQTT Username (default: "user")
 - `DMQTT_PASSWORD`: MQTT Password (default: "password")
-- `DMQTT_PORT`: MQTT Port <port>
-- `DMQTT_PREFIX`: MQTT Topic Prefix <prefix>
+- `DMQTT_PORT`: MQTT Port (default: 1883)<port>
+- `DMQTT_PREFIX`: MQTT Topic Prefix (default: "denon")<prefix>
 - `DMQTT_IP`: Comma-separated list of AVR IP addresses
 - `DMQTT_NAME`: Comma-separated list of AVR friendly names (default: "Home Theater")
 - `DMQTT_ID`: Comma-separated list of AVR unique IDs (default: "denon")
@@ -99,7 +100,8 @@ Environment variables supported for setting parameters in Docker container:
 
 ### Run MQTT
 
-You can use the below Docker compose configuration to run MQTT. Reference the mosquitto documentation for more details.
+You can use the below Docker compose configuration to run MQTT. Reference the 
+[mosquitto docker documentation](https://hub.docker.com/_/eclipse-mosquitto) for more details.
 
 ```yaml
 services:
@@ -123,13 +125,14 @@ Options:
 
 ```
   -i, --info                 Display current version number
-  -f, --file <file>          Get configuration from JSON file
+  -a, --avr <list>           Comma-separated list of AVR IP addresses
+  -d, --discover             Discover configuration and write to JSON file (default is receivers-discovered.json)'
+  -f, --file <file>          Name of configuration JSON file
   -m, --mqtt <url>           MQTT URL (default: "localhost")
   -u, --username <username>  MQTT Username (default: "user")
   -p, --password <password>  MQTT Password (default: "password")
-  --port                     MQTT Port <port>
-  --prefix                   MQTT Topic Prefix <prefix>
-  -a, --avr <list>           Comma-separated list of AVR IP addresses
+  --port                     MQTT Port (default: 1883)<port>
+  --prefix                   MQTT Topic Prefix (default: "denon")<prefix>
   --name <list>              Comma-separated list of AVR friendly names (default: "Home Theater")
   --id <list>                Comma-separated list of AVR unique IDs (default: "denon")
   -z --zones <list>             Comma-separated list of | separated AVR zone names (default: "Main|Zone 2")
@@ -144,12 +147,31 @@ index, and code used by the Telnet interface). It also maps source to zones wher
 
 If discovery fails, you will need to manually configure your AVR. See below for the full configuration syntax.
 
+Use the `-d` or `--discover` option run the discovery process. The only other required variable is `-a` or `--avr` 
+to specify AVR IP address(es).
+
+```bash
+denon-mqtt -d -a your.avr.ip.address
+```
+
+The configuration file will be saved in the current path as `receivers-discovered.json`. Any existing files with this
+name will be overwritten. To specify a different filename, use the `-f` or `--file` options:
+
+```bash
+denon-mqtt -d -a your.avr.ip.address -f your-very-special-file-name.json
+```
+
 ### AVR Configuration
 
 While it is possible to get the interface up and running with only command-line options, accessing all features requires
 a configuration file to configure each AVR controlled by the interface. The interface will look for a file named
 `receivers.json` using the following format(see `receivers.json.sample` for an example). In the example below, "Home
 Theater" is the configuration for a Denon X4500H and "Office" is the configuration for a Denon S950H.
+
+Note that the `code` value of each source must match the code expected by the control protocol. For the list of sources
+for each zone, the value must match a `code` value in the receiver source list.
+
+The `id` value for the AVR is used in the names of MQTT topics and must be unique within the configuraiton.
 
 ```JSON
 [
