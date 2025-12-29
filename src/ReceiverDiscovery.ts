@@ -47,7 +47,7 @@ export class ReceiverDiscovery {
 
     await this.init();
 
-    await this.discoverSourceCodes(selectedSources[0]);
+    await this.discoverSourceCodes(selectedSources);
 
     await this.disconnect();
 
@@ -114,7 +114,9 @@ export class ReceiverDiscovery {
     }
   }
 
-  async discoverSourceCodes(selected: string) {
+  async discoverSourceCodes(selectedSources: string[]) {
+    const selected = selectedSources[0];
+
     // Change source if it is already the first source.
     if (this.config.sources[0].display === selected) {
       console.debug('Changing source from first source prior to scanning...');
@@ -138,6 +140,22 @@ export class ReceiverDiscovery {
       console.debug(`Setting source back to ${selectedSource.display}...`);
 
       await this.setSource(selectedSource.index);
+    }
+
+    // Get last source for zone 2 which should be zone 1 output (SOURCE)
+    if (this.config.zones.length > 1) {
+      const zone2 = this.config.zones[1];
+      const lastZone2Source = zone2.sources[zone2.sources.length - 1];
+
+      await Promise.all([this.getSourceCode(lastZone2Source, 2), this.setSource(lastZone2Source, 2)]);
+
+      const selectedZone2Source = this.config.sources.find((s) => s.display === selectedSources[1]);
+
+      if (selectedZone2Source && selectedZone2Source.index !== lastZone2Source) {
+        console.debug(`Setting Zone 2 source back to ${selectedZone2Source.display}...`);
+
+        await this.setSource(selectedZone2Source.index);
+      }
     }
 
     // Update soure zones from index to codes
@@ -166,8 +184,8 @@ export class ReceiverDiscovery {
     return selectedSources;
   }
 
-  async setSource(index: string) {
-    const data = encodeURIComponent(`<Source zone="1" index="${index}"></Source>`);
+  async setSource(index: string, zone: number = 1) {
+    const data = encodeURIComponent(`<Source zone="${zone}" index="${index}"></Source>`);
     const result = await fetch(`https://${this.config.ip}:10443/ajax/globals/set_config?type=7&data=${data}`);
 
     if (result.status !== 200) {
@@ -177,11 +195,11 @@ export class ReceiverDiscovery {
     }
   }
 
-  async getSourceCode(index: string) {
+  async getSourceCode(index: string, zone: number = 1) {
     const source = this.config.sources.find((s) => s.index === index);
 
     if (source) {
-      const code = await this.waitForReponse('SI');
+      const code = await this.waitForReponse(zone === 1 ? 'SI' : `Z${zone}`);
 
       if (code) {
         source.code = code.substring(2, code.length);
