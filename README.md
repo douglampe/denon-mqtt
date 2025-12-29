@@ -1,5 +1,9 @@
 # denon-mqtt
 
+> [!NOTE]
+> Note: you must have access to an MQTT server for this interface to work (See below for information on running MQTT 
+> via Docker).
+
 This project provides MQTT support for Denon and Marantz Audio Video Receivers (AVRs). While it does not provide 100%
 compatibility with the protocol, it has been developed in line with documentation for version ("Application model")
 AVR-3312CI/AVR-3312 and version 0.06 of the specification for AVR-S700, S900, X1100, X3100, X4100, X5200, and X7200. It
@@ -9,10 +13,6 @@ has been tested with the following receiver models:
 - X4500H
 
 ## Quick Start
-
-> [!NOTE]
-> Note: you must have access to an MQTT server for this interface to work (See below for information on running MQTT 
-> via Docker).
 
 ```bash
 # Create folder to store configuration:
