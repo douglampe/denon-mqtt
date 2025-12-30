@@ -11,3 +11,4 @@ ha-config/*
 !ha-config/switch
 !ha-config/README.md
 receivers.json
+receivers-discovered.json

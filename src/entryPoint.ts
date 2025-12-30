@@ -6,8 +6,8 @@ import { CliParser } from './CliParser';
 (async () => {
   dotenv.config();
 
-  if (!process.env.AVR_HOST) {
-    throw new Error('Must set AVR_HOST environment variable');
+  if (process.argv.length <= 2 && !process.env.AVR_HOST) {
+    throw new Error('Must set AVR_HOST environment variable or provide command line parameters');
   }
 
   if (process.argv.length > 2) {

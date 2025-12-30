@@ -3,6 +3,8 @@ import fs from 'fs/promises';
 import path from 'path';
 
 import { Orchestrator, OrchestratorOptions } from './Orchestrator';
+import { ReceiverDiscovery } from './ReceiverDiscovery';
+import { ReceiverConfig } from './ReceiverConfig';
 
 export class CliParser {
   public static isTest: boolean;
@@ -23,16 +25,17 @@ export class CliParser {
     program.name(options.name).version(options.version, '-i, --info', 'Display current version number');
 
     program
-      .option('-f, --file <file>', 'Get configuration from JSON file', process.env.DMQTT_FILE)
+      .option('-a, --avr <list>', 'Comma-separated list of AVR IP addresses', process.env.DMQTT_IP)
+      .option('-d, --discover', 'Discover configuration and write to JSON file (default is receivers-discovered.json)')
+      .option('-f, --file <file>', 'Name of configuration JSON file', process.env.DMQTT_FILE)
       .option('-m, --mqtt <url>', 'MQTT URL', process.env.DMQTT_HOST ?? 'localhost')
       .option('-u, --username <username>', 'MQTT Username', process.env.DMQTT_USER ?? 'user')
       .option('-p, --password <password>', 'MQTT Password', process.env.DMQTT_PASSWORD ?? 'password')
       .option('--port', 'MQTT Port <port>', process.env.DMQTT_PORT ?? '1883')
       .option('--prefix', 'MQTT Topic Prefix <prefix>', process.env.DMQTT_PREFIX ?? 'denon')
-      .option('-a, --avr <list>', 'Comma-separated list of AVR IP addresses', process.env.DMQTT_IP)
       .option('--name <list>', 'Comma-separated list of AVR friendly names', process.env.DMQTT_NAME ?? 'Home Theater')
       .option('--id <list>', 'Comma-separated list of AVR unique IDs', process.env.DMQTT_ID ?? 'denon')
-      .option('--zones <list>', 'Comma-separated list of | separated AVR zone names', process.env.DMQTT_ZONES ?? 'Main|Zone 2')
+      .option('-z --zones <list>', 'Comma-separated list of | separated AVR zone names', process.env.DMQTT_ZONES ?? 'Main|Zone 2')
       .action(CliParser.start);
 
     await program.parseAsync(options.args);
@@ -40,6 +43,20 @@ export class CliParser {
 
   public static async start(_opts: any, command: Command) {
     const opts = command.optsWithGlobals();
+
+    if (opts.discover) {
+      const avrHosts = opts.avr.split(',');
+      const config: ReceiverConfig[] = [];
+
+      for (let i = 0; i < avrHosts.length; i++) {
+        const discovery = new ReceiverDiscovery(opts.id, avrHosts[i]);
+        const receiver = await discovery.discover();
+        config.push(receiver);
+      }
+
+      await fs.writeFile(path.resolve(opts.file ?? 'receivers-discovered.json'), JSON.stringify(config, null, 2));
+      return;
+    }
 
     const options: OrchestratorOptions = {
       ...(opts as OrchestratorOptions),
@@ -79,6 +96,7 @@ export class CliParser {
           name: avrNames[i],
           ip: avrHosts[i],
           zones: zones[i],
+          sources: [],
         });
       }
     }
