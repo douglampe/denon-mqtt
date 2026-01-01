@@ -1,6 +1,7 @@
 import libxmljs from 'libxmljs';
-import { ReceiverConfig } from './ReceiverConfig';
 import { Telnet } from 'telnet-client';
+
+import { ReceiverConfig } from './ReceiverConfig';
 import { TelnetBroadcaster } from './TelnetBroadcaster';
 
 export class ReceiverDiscovery {
@@ -60,6 +61,7 @@ export class ReceiverDiscovery {
     const name = friendlyName.root()?.text();
     if (name) {
       this.config.name = name;
+      this.config.id = name.replace(new RegExp(/\W+/), '_').toLowerCase();
     }
   }
 
@@ -199,7 +201,7 @@ export class ReceiverDiscovery {
     return selectedSources;
   }
 
-  async setSource(index: string, zone: number = 1) {
+  async setSource(index: string, zone = 1) {
     console.debug(`Setting zone ${zone} source to index ${index}`);
     const data = encodeURIComponent(`<Source zone="${zone}" index="${index}"></Source>`);
     const result = await fetch(`https://${this.config.ip}:10443/ajax/globals/set_config?type=7&data=${data}`);
@@ -211,7 +213,7 @@ export class ReceiverDiscovery {
     }
   }
 
-  async getSourceCode(index: string, zone: number = 1) {
+  async getSourceCode(index: string, zone = 1) {
     const source = this.config.sources.find((s) => s.index === index);
 
     if (source) {
@@ -223,7 +225,7 @@ export class ReceiverDiscovery {
     }
   }
 
-  public async fetchAvrData(type: number, prefix: string = 'globals') {
+  public async fetchAvrData(type: number, prefix = 'globals') {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     const result = await fetch(`https://${this.config.ip}:10443/ajax/${prefix}/get_config?type=${type}`);
 

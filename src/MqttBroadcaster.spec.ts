@@ -24,26 +24,7 @@ describe('MqttBroadcaster', () => {
   });
 
   describe('getTopic()', () => {
-    it.each([
-      {
-        component: 'switch',
-        id: 'power',
-        zone: 1,
-        topic: 'prefix/switch/avr_id_main_zone_power/state',
-      },
-      {
-        component: 'volume',
-        id: 'volume',
-        zone: 2,
-        topic: 'prefix/volume/avr_id_zone2_volume/state',
-      },
-      {
-        component: 'select',
-        id: 'source',
-        zone: 2,
-        topic: 'prefix/select/avr_id_zone2_source/state',
-      },
-    ])('should return $topic', async (data: GetTopicTestData) => {
+    it('should return ../main_zone/... for zone 1', async () => {
       const client = await connectAsync('mqtt://foo:123');
       const broadcaster = new MqttBroadcaster({
         prefix: 'prefix',
@@ -51,9 +32,22 @@ describe('MqttBroadcaster', () => {
         client,
       });
 
-      const result = broadcaster.getTopic(data.component, data.id, data.zone);
+      const result = broadcaster.getTopic(1);
 
-      expect(result).toEqual(data.topic);
+      expect(result).toEqual('prefix/avr_id/main_zone/state');
+    });
+
+    it('should return ../zone2/... for zone 2', async () => {
+      const client = await connectAsync('mqtt://foo:123');
+      const broadcaster = new MqttBroadcaster({
+        prefix: 'prefix',
+        id: 'avr_id',
+        client,
+      });
+
+      const result = broadcaster.getTopic(2);
+
+      expect(result).toEqual('prefix/avr_id/zone2/state');
     });
   });
 
@@ -73,8 +67,8 @@ describe('MqttBroadcaster', () => {
       state.updateState(ReceiverSettings.ChannelVolume, { raw: '', dictionary: { FL: '50', FR: '50', C: '50', SL: '50', SR: '50' } });
       const result = broadcaster.getStateWithKeys(state.state);
       expect(result).toEqual({
-        Volume: '50',
-        ChannelVolume: { FL: '50', FR: '50', C: '50', SL: '50', SR: '50' },
+        volume: '50',
+        channel_volume: { FL: '50', FR: '50', C: '50', SL: '50', SR: '50' },
       });
     });
   });
@@ -96,10 +90,42 @@ describe('MqttBroadcaster', () => {
     });
 
     it.each([
-      { key: ReceiverSettings.Power, zone: 1, value: { raw: 'ON', text: 'ON' }, topic: 'prefix/switch/avr_id_main_zone_power/state' },
-      { key: ReceiverSettings.Source, zone: 1, value: { raw: 'DVD', text: 'DVD' }, topic: 'prefix/select/avr_id_main_zone_source/state' },
-      { key: ReceiverSettings.Volume, zone: 1, value: { raw: '55', numeric: 55 }, topic: 'prefix/volume/avr_id_main_zone_volume/state' },
-    ])('should publish to state $topic', async (testData) => {
+      {
+        key: ReceiverSettings.Power,
+        zone: 1,
+        value: { raw: 'ON', text: 'ON' },
+        ip: '192.168.1.123',
+        topic: 'prefix/avr_id/main_zone/state',
+        payload: JSON.stringify({ power: 'ON' }),
+      },
+      {
+        key: ReceiverSettings.Source,
+        zone: 1,
+        value: { raw: 'DVD', text: 'DVD' },
+        ip: '192.168.1.123',
+        topic: 'prefix/avr_id/main_zone/state',
+        payload: JSON.stringify({ source: 'DVD' }),
+      },
+      {
+        key: ReceiverSettings.Volume,
+        zone: 1,
+        value: { raw: '55', numeric: 55 },
+        ip: '192.168.1.123',
+        topic: 'prefix/avr_id/main_zone/state',
+        payload: JSON.stringify({ volume: 55 }),
+      },
+      {
+        key: ReceiverSettings.ChannelSetting,
+        zone: 1,
+        value: { raw: 'FL 50', key: 'FL', value: '50' },
+        ip: '192.168.1.123',
+        topic: 'prefix/avr_id/main_zone/state',
+        payload: JSON.stringify({ channel_setting: { key: 'FL', value: '50' } }),
+      },
+      { key: ReceiverSettings.Volume, zone: 2, value: { raw: '55', numeric: 55 }, 
+        ip: '192.168.1.123',
+      topic: 'prefix/avr_id/zone2/state', payload: JSON.stringify({ volume: 55 }) },
+    ])('should publish to payload $payload to $topic', async (testData) => {
       (connectAsync as jest.Mock).mockResolvedValueOnce({
         publish: mockPublish,
       });
@@ -110,14 +136,10 @@ describe('MqttBroadcaster', () => {
         client,
       });
       await broadcaster.publish(testData);
-      expect(mockPublish).toHaveBeenCalledWith(testData.topic, testData.value.raw);
+      expect(mockPublish).toHaveBeenCalledWith(testData.topic, testData.payload);
     });
 
-    it.each([
-      { key: ReceiverSettings.Power, zone: 1, value: { raw: 'ON' }, topic: 'prefix/switch/avr_id_main_zone_power/state' },
-      { key: ReceiverSettings.Source, zone: 1, value: { raw: 'DVD' }, topic: 'prefix/select/avr_id_main_zone_source/state' },
-      { key: ReceiverSettings.Volume, zone: 1, value: { raw: '55' }, topic: 'prefix/volume/avr_id_main_zone_volume/state' },
-    ])('should log error if value is mising for key $key', async (testData) => {
+    it('should log error if setting cannot be mapped for zone', async () => {
       (connectAsync as jest.Mock).mockResolvedValueOnce({
         publish: mockPublish,
       });
@@ -130,26 +152,9 @@ describe('MqttBroadcaster', () => {
 
       const mockLog = jest.spyOn(console, 'error');
 
-      await broadcaster.publish(testData);
+      await broadcaster.publish({ key: 9999 as ReceiverSettings, value: { raw: 'C 55', key: 'C', value: '55' }, zone: 2, ip: '192.168.1.123' });
 
-      expect(mockLog).toHaveBeenCalledWith(
-        `Could not parse message payload from value for setting ${ReceiverSettings[testData.key]}: {"raw":"${testData.value.raw}"}`,
-      );
-    });
-
-    it('should log error and exit of update key not supported', async () => {
-      const client = await connectAsync('mqtt://foo:123');
-      const broadcaster = new MqttBroadcaster({
-        prefix: 'prefix',
-        id: 'avr_id',
-        client,
-      });
-
-      const mockLog = jest.spyOn(console, 'error');
-
-      await broadcaster.publish({ key: ReceiverSettings.ECOMode, zone: 1, value: { raw: 'foo' } });
-
-      expect(mockLog).toHaveBeenCalledWith('Could not parse message payload from value for setting ECOMode: {"raw":"foo"}');
+      expect(mockLog).toHaveBeenCalledWith('Cannot map setting 9999');
     });
   });
 
@@ -162,52 +167,12 @@ describe('MqttBroadcaster', () => {
       });
       const client = await connectAsync('mqtt://foo:123');
       const broadcaster = new MqttBroadcaster({
-        ...MqttBroadcaster.DefaultOptions,
+        prefix: 'prefix',
+        id: 'avr_id',
         client,
       });
       await broadcaster.publishState(state, 1);
-      expect(mockPublish).toHaveBeenCalledWith(
-        `${MqttBroadcaster.DefaultOptions.prefix}/sensor/${MqttBroadcaster.DefaultOptions.id}_main_zone_state/state`,
-        '{"Volume":55}',
-      );
+      expect(mockPublish).toHaveBeenCalledWith('prefix/avr_id/main_zone/state', '{"state":{"volume":55}}');
     });
-  });
-
-  it('should call send for zone 2', async () => {
-    const state = new ReceiverState();
-    state.updateState(ReceiverSettings.Volume, { raw: '55', numeric: 55 });
-
-    (connectAsync as jest.Mock).mockResolvedValueOnce({
-      publish: mockPublish,
-    });
-    const client = await connectAsync('mqtt://foo:123');
-    const broadcaster = new MqttBroadcaster({
-      ...MqttBroadcaster.DefaultOptions,
-      client,
-    });
-    await broadcaster.publishState(state, 2);
-    expect(mockPublish).toHaveBeenCalledWith(
-      `${MqttBroadcaster.DefaultOptions.prefix}/sensor/${MqttBroadcaster.DefaultOptions.id}_zone2_state/state`,
-      '{"Volume":55}',
-    );
-  });
-
-  it('should call send for zone 3', async () => {
-    const state = new ReceiverState();
-    state.updateState(ReceiverSettings.Volume, { raw: '55', numeric: 55 });
-
-    (connectAsync as jest.Mock).mockResolvedValueOnce({
-      publish: mockPublish,
-    });
-    const client = await connectAsync('mqtt://foo:123');
-    const broadcaster = new MqttBroadcaster({
-      ...MqttBroadcaster.DefaultOptions,
-      client,
-    });
-    await broadcaster.publishState(state, 3);
-    expect(mockPublish).toHaveBeenCalledWith(
-      `${MqttBroadcaster.DefaultOptions.prefix}/sensor/${MqttBroadcaster.DefaultOptions.id}_zone3_state/state`,
-      '{"Volume":55}',
-    );
   });
 });

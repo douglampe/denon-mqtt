@@ -29,13 +29,13 @@ export class ReceiverManager {
 
     console.debug(`Connected to Receiver "${this.options.name} on ${this.options.ip}`);
 
-    this.listener = new TelnetListener(telnetClient, this.options.zones.length);
+    this.listener = new TelnetListener(telnetClient, this.options.zones.length, this.options.ip);
 
     this.broadcaster = new TelnetBroadcaster(telnetClient);
   }
 
   public async query() {
-    await this.broadcaster.query();
+    await this.broadcaster.query(this.options.zones.length);
   }
 
   public async read() {

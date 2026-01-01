@@ -1,4 +1,4 @@
-import { ReceiverSettings, ReceiverState, StateUpdate, StateValue } from 'denon-state-manager';
+import { ReceiverSettings, ReceiverState, StateValue } from 'denon-state-manager';
 import { MqttClient } from 'mqtt/*';
 
 import { MqttUpdate } from './MqttUpdate';
@@ -9,6 +9,31 @@ export interface MqttBroadcasterOptions {
   client: MqttClient;
 }
 
+const ReceiverSettingsMap: Record<string, string> = {
+  None: 'none',
+  ChannelSetting: 'channel_setting',
+  ChannelVolume: 'channel_volume',
+  DigitalInput: 'digital_input',
+  ECOMode: 'eco_mode',
+  MainPower: 'main_power',
+  MaxVolume: 'max_volume',
+  Mute: 'mute',
+  Parameters: 'parameters',
+  Power: 'power',
+  SD: 'sd',
+  Sleep: 'sleep',
+  Source: 'source',
+  SSLevels: 'ss_levels',
+  SSSpeakers: 'ss_speakers',
+  Standby: 'standby',
+  SurroundMode: 'surround_mode',
+  VideoSelect: 'video_select',
+  VideoSelectSource: 'video_select_source',
+  HPF: 'hpf',
+  QuickSelect: 'quick_select',
+  Volume: 'volume',
+};
+
 export class MqttBroadcaster {
   public static DefaultOptions = {
     prefix: 'denon',
@@ -17,9 +42,9 @@ export class MqttBroadcaster {
 
   constructor(private options: MqttBroadcasterOptions) {}
 
-  public getTopic(component: string, id: string, zone: number) {
+  public getTopic(zone: number) {
     const zonePrefix = zone == 1 ? 'main_zone' : `zone${zone}`;
-    return `${this.options.prefix}/${component}/${this.options.id}_${zonePrefix}_${id}/state`;
+    return `${this.options.prefix}/${this.options.id}/${zonePrefix}/state`;
   }
 
   public getStateWithKeys(state: { [key in ReceiverSettings]?: StateValue }) {
@@ -29,7 +54,7 @@ export class MqttBroadcaster {
       const name = ReceiverSettings[key as keyof typeof ReceiverSettings];
       const processedValue = value.dictionary ?? value.numeric ?? value.text ?? value.raw;
       if (processedValue) {
-        stateWithKeys[name] = processedValue;
+        stateWithKeys[ReceiverSettingsMap[name]] = processedValue;
       }
     }
 
@@ -37,51 +62,52 @@ export class MqttBroadcaster {
   }
 
   public async publish(update: MqttUpdate): Promise<void> {
-    let component: string | undefined;
-    let message: string | undefined;
     const key = update.key ?? ReceiverSettings.None;
-    const id = ReceiverSettings[key].toLowerCase();
+    const id = ReceiverSettingsMap[ReceiverSettings[key]];
+
+    if (!id) {
+      console.error(`Cannot map setting ${key}`);
+      return;
+    }
 
     if (!update.value) {
       console.error('update.value is undefined');
       return;
     }
 
-    switch (update.key) {
-      case ReceiverSettings.Power:
-      case ReceiverSettings.Mute:
-        component = 'switch';
-        message = update.value.text ?? '';
-        break;
-      case ReceiverSettings.Source:
-        component = 'select';
-        message = update.value.text ?? '';
-        break;
+    const payload: Record<string, any> = {};
+
+    switch (key) {
       case ReceiverSettings.Volume:
-        component = 'volume';
-        message = update.value.numeric?.toString() ?? '';
+      case ReceiverSettings.MaxVolume:
+        payload[id] = update.value.numeric;
+        break;
+      case ReceiverSettings.Parameters:
+      case ReceiverSettings.ChannelVolume:
+      case ReceiverSettings.ChannelSetting:
+      case ReceiverSettings.SSSpeakers:
+      case ReceiverSettings.SSLevels:
+        payload[id] = { key: update.value.key, value: update.value.value };
+        break;
+      default:
+        payload[id] = update.value.raw;
         break;
     }
 
-    if ((message ?? '') === '') {
-      console.error(`Could not parse message payload from value for setting ${ReceiverSettings[key]}: ${JSON.stringify(update.value)}`);
-      return;
-    }
+    const topic = this.getTopic(update.zone);
 
-    if (component && message) {
-      const topic = this.getTopic(component, id, update.zone);
+    const message = JSON.stringify(payload);
 
-      console.debug(`Sending message to topic ${topic}: ${message}`);
-      this.options.client.publish(topic, message);
-    }
+    console.debug(`[MQTT:${topic}] ${message}`);
+    this.options.client.publish(topic, message);
   }
 
   public async publishState(state: ReceiverState, zone: number): Promise<void> {
-    const message = JSON.stringify(this.getStateWithKeys(state.state));
+    const message = JSON.stringify({ state: this.getStateWithKeys(state.state) });
 
-    const topic = this.getTopic('sensor', 'state', zone);
+    const topic = this.getTopic(zone);
 
-    console.debug(`Sending message to topic ${topic}: ${message}`);
+    console.debug(`[MQTT:${topic}] ${message}`);
     this.options.client.publish(topic, message);
 
     return Promise.resolve();

@@ -41,8 +41,12 @@ export class MqttManager {
     await mqttListener.listen();
   }
 
-  publish(update: MqttUpdate) {
-    return this.broadcaster.publish(update);
+  async publish(update: MqttUpdate) {
+    // HACK: Seems like telnet client raising events on all clients regardless of the source so this is to make sure
+    // we only publish to the broadcaster matching the receiver IP.
+    if (update.ip === this.options.receiver.ip) {
+      await this.broadcaster.publish(update);
+    }
   }
 
   publishState(state: ReceiverState, zone: number) {

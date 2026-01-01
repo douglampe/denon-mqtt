@@ -4,4 +4,5 @@ export interface MqttUpdate {
   key: ReceiverSettings;
   value: StateValue;
   zone: number;
+  ip: string;
 }
