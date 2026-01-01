@@ -267,10 +267,6 @@ The following payloads formats are required for each listed setting:
 
 #### Text
 
-```json
-{ "[setting]": { "text": "[text]" } }
-```
-
 - digital_input
 - eco_mode
 - main_power
@@ -286,25 +282,48 @@ The following payloads formats are required for each listed setting:
 - hpf
 - quick_select
 
+**Schema:**
+```json
+{ "[setting]": { "text": "[text]" } }
+```
+
+**Example:**
+```json
+{ "power": { "test": "ON" } }
+```
+
 #### Numeric
 
-```json
-{ "[setting]": { "numeric": [number] } }
-```
 - max_volume
 - volume
 
-#### Key/Value Pairs
-
+**Schema:**
 ```json
-{ "[setting]": { "key": "[key]", "value": "[value]" } }
+{ "[setting]": { "numeric": [number] } }
 ```
+
+**Example:**
+```json
+{ "volume": { "numeric": 50 } }
+```
+
+#### Key/Value Pairs
 
 - channel_setting
 - channel_volume
 - ss_levels
 - ss_speakers
 - parameters
+
+**Schema:**
+```json
+{ "[setting]": { "key": "[key]", "value": "[value]" } }
+```
+
+**Example:**
+```json
+{ "channel_volume": { "key": "C", "value": "50" } }
+```
 
 ### State Topic and Payload
 
@@ -316,10 +335,6 @@ The payload syntax varies based on the setting updated as follows:
 
 #### Text
 
-```json
-{ "[setting]": "[text]" }
-```
-
 - digital_input
 - eco_mode
 - main_power
@@ -335,19 +350,33 @@ The payload syntax varies based on the setting updated as follows:
 - hpf
 - quick_select
 
+**Schema:**
+```json
+{ "[setting]": "[text]" }
+```
+
+**Example:**
+```json
+{ "power": "ON" }
+```
+
+
 #### Numeric
 
-```json
-{ "[setting]": [number] }
-```
 - max_volume
 - volume
 
-#### Key/Value Pairs
-
+**Schema:**
 ```json
-{ "[setting]": { "key": "[key]", "value": "[value]" } }
+{ "[setting]": [number] }
 ```
+
+**Example:**
+```json
+{ "volume": 55 }
+```
+
+#### Key/Value Pairs
 
 - channel_setting
 - channel_volume
@@ -355,11 +384,22 @@ The payload syntax varies based on the setting updated as follows:
 - ss_speakers
 - parameters
 
+**Schema:**
+```json
+{ "[setting]": { "key": "[key]", "value": "[value]" } }
+```
+
+**Example:**
+```json
+{ "channel_volume": { "key": "C", "value": "55" } }
+```
+
 #### Full State
 
 In addition to individual messages for each setting, the full state is sent every time a value is changed with the
 following payload:
 
+**Schema:**
 ```json
 {
   "state": [state]
@@ -376,6 +416,7 @@ Each value follows the same syntax as above. For Key/Value pairs, the value is a
 
 For example, below is a valid state from a Denon X4500H:
 
+**Example:**
 ```json
 {
   "state": {
