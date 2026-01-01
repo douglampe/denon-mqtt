@@ -3,8 +3,8 @@ import fs from 'fs/promises';
 import path from 'path';
 
 import { Orchestrator, OrchestratorOptions } from './Orchestrator';
-import { ReceiverDiscovery } from './ReceiverDiscovery';
 import { ReceiverConfig } from './ReceiverConfig';
+import { ReceiverDiscovery } from './ReceiverDiscovery';
 
 export class CliParser {
   public static isTest: boolean;

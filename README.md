@@ -252,99 +252,253 @@ The `id` value for the AVR is used in the names of MQTT topics and must be uniqu
 
 ## MQTT Syntax
 
+> [!NOTE]
+> Note: Verion 0.0.5 introduced a **BREAKING CHANGE** to the MQTT schema.
+
 In addition to the below topics and payloads, you can request updated status data from the receiver by posting a text
-payload of `REFRESH` to topic `{prefix}/device/command`. Note that this command will requery all configured receivers.
+payload of `REFRESH` to topic `{prefix}/{id}/device/command`.
 
-### Command Topics
+### Command Topic and Payload
 
-The following topics are supported. In each topic name below, `{prefix}` is the global prefix (default: `denon`) and 
-`{zone}` is the zone identifier (`main_zone`, `zone1`, `zone2`).
+The topic for all commands is `{prefix}/{id}/{zone}/command` where `{prefix}` is the global prefix (default: `denon`), 
+`{id}` is the unique identifier of the AVR, and `{zone}` is the zone identifier (`main_zone`, `zone1`, `zone2`).
 
-- `{prefix}/switch/{zone}_power/command`
-- `{prefix}/switch/{zone}_mute/command`
-- `{prefix}/volume/{zone}_volume/command`
-- `{prefix}/select/{zone}_source/command`
+The following payloads formats are required for each listed setting:
 
-### Command Payloads
+#### Text
 
-The following payloads formats are required for each command topics:
+- digital_input
+- eco_mode
+- main_power
+- mute
+- power
+- sd
+- sleep
+- source
+- standby
+- surround_mode
+- video_select
+- video_select_source
+- hpf
+- quick_select
 
-- power: `{ text: "value" }` where `value` is `ON` or `OFF`
-- mute: `{ text: "value" }` where `value` is `ON` or `OFF`
-- volume: `{ numeric: value }` where `value` is between 1 and the max volume set for the AVR
-- source: `{ text: "value" }` where `value` is a valid source identifier (ex: `BD`, `CD`, `DVD`, `AUX1`, `AUX2`)
+**Schema:**
+```json
+{ "[setting]": { "text": "[text]" } }
+```
 
-### State Topics
+**Example:**
+```json
+{ "power": { "test": "ON" } }
+```
 
-NOTE: While the interface maintains state based on the latest messages received from the AVR, it is possible that not
-all states will always be available.
+#### Numeric
 
-The messages are published to the following topics each time a related command is received from the receiver:
+- max_volume
+- volume
 
-- `{prefix}/switch/{zone}_power/state`
-- `{prefix}/switch/{zone}_mute/state`
-- `{prefix}/volume/{zone}_volume/state`
-- `{prefix}/select/{zone}_source/state`
-- `{prefix}/select/{zone}_state/state`
+**Schema:**
+```json
+{ "[setting]": { "numeric": [number] } }
+```
 
-### State Payloads
+**Example:**
+```json
+{ "volume": { "numeric": 50 } }
+```
 
-The following text (**NOT** JSON) payloads are published when the interface receives a related command from the receiver:
+#### Key/Value Pairs
 
-- power: `ON`|`OFF`
-- mute: `ON`|`OFF`
-- volume: 2-digit number (ex: `01`)
-- source: valid source identifier (ex: `BD`, `CD`, `DVD`, `AUX1`, `AUX2`)
+- channel_setting
+- channel_volume
+- ss_levels
+- ss_speakers
+- parameters
 
-The state topic publishes the full comprehensive state of the AVR in JSON format as an object of key/value pairs. The
-following keys are supported:
+**Schema:**
+```json
+{ "[setting]": { "key": "[key]", "value": "[value]" } }
+```
 
-- ChannelSetting
-- ChannelVolume
-- DigitalInput
-- ECOMode
-- MainPower
-- MaxVolume
-- Mute
-- Parameters
-- Power
-- SD
-- Sleep
-- Source
-- SSLevels
-- SSSpeakers
-- Standby
-- SurroundMode
-- VideoSelect
-- VideoSelectSource
-- HPF
-- QuickSelect
-- Volume
+**Example:**
+```json
+{ "channel_volume": { "key": "C", "value": "50" } }
+```
 
-For settings that support multiple parameters (`ChannelVolume`, `Parameters`, `SSLevels`, etc.), the value will be a 
-JSON object with multiple key/value pairs with text format for all values. `Volume` and `MaxVolume` values are numeric
-(integer). All other values are text.
+### State Topic and Payload
 
-For example, the following is a valid main zone status payload:
+All state changes are published to `{prefix}/{id}/{zone}/state` where `{prefix}` is the global prefix (default:
+`denon`), `{id}` is the unique identifier of the AVR, and `{zone}` is the zone identifier (`main_zone`, `zone1`, 
+`zone2`).
 
+The payload syntax varies based on the setting updated as follows:
+
+#### Text
+
+- digital_input
+- eco_mode
+- main_power
+- mute
+- power
+- sd
+- sleep
+- source
+- standby
+- surround_mode
+- video_select
+- video_select_source
+- hpf
+- quick_select
+
+**Schema:**
+```json
+{ "[setting]": "[text]" }
+```
+
+**Example:**
+```json
+{ "power": "ON" }
+```
+
+
+#### Numeric
+
+- max_volume
+- volume
+
+**Schema:**
+```json
+{ "[setting]": [number] }
+```
+
+**Example:**
+```json
+{ "volume": 55 }
+```
+
+#### Key/Value Pairs
+
+- channel_setting
+- channel_volume
+- ss_levels
+- ss_speakers
+- parameters
+
+**Schema:**
+```json
+{ "[setting]": { "key": "[key]", "value": "[value]" } }
+```
+
+**Example:**
+```json
+{ "channel_volume": { "key": "C", "value": "55" } }
+```
+
+#### Full State
+
+In addition to individual messages for each setting, the full state is sent every time a value is changed with the
+following payload:
+
+**Schema:**
 ```json
 {
-  "ChannelVolume": { "FL":"50", "FR":"50", "C":"50", "SL":"50", "SR":"50" },
-  "DigitalInput": "AUTO",
-  "MainPower": "ON",
-  "MaxVolume": 98,
-  "Mute": "OFF",
-  "Parameters": { "DRC": "OFF", "LFE": "00", "BAS": "50", "TRE": "50", "TONE CTRL": "OFF", "CLV": "50", "SWL": "50" },
-  "Power": "ON",
-  "SD": "AUTO",
-  "Sleep": "OFF",
-  "Source": "SAT/CBL",
-  "SSLevels": { "C": "50", "FL": "50", "FR": "50", "SL": "50", "SR": "50", "SBL": "50", "SBR": "50" },
-  "SSSpeakers": { "FRO": "LAR", "CEN": "SMA", "SUA": "SMA", "SBK": "2SP", "FRH": "NON", "TFR": "NON", "TPM": "NON",
-    "FRD": "NON", "SUD": "NON", "TPR": "NON", "RHE": "NON", "BKD": "NON", "SHE": "NON", "TPS": "NON", "SWF": "NON" },
-  "SurroundMode": "DOLBY AUDIO-DD+ +DSUR",
-  "VideoSelect": "OFF",
-  "Volume": 51
+  "state": [state]
+}
+```
+
+Where `[state]` is a JSON object with a key for each setting for the zone.
+
+> [!NOTE]
+> Note: While the interface maintains state whenever a command is received by the interface, not every value may be
+> available at all times.
+
+Each value follows the same syntax as above. For Key/Value pairs, the value is a JSON object containing all values.
+
+For example, below is a valid state from a Denon X4500H:
+
+**Example:**
+```json
+{
+  "state": {
+    "channel_volume": {
+      "FL": "50",
+      "FR": "50",
+      "C": "50",
+      "SL": "50",
+      "SR": "50"
+    },
+    "digital_input": "AUTO",
+    "main_power": "ON",
+    "max_volume": 98,
+    "mute": "OFF",
+    "parameters": {
+      "DRC": "OFF",
+      "LFE": "00",
+      "BAS": "50",
+      "TRE": "50",
+      "TONE CTRL": "OFF",
+      "CLV": "50",
+      "SWL": "50"
+    },
+    "power": "ON",
+    "sd": "AUTO",
+    "sleep": "OFF",
+    "source": "SAT/CBL",
+    "ss_levels": {
+      "C": "50",
+      "FL": "50",
+      "FR": "50",
+      "SL": "50",
+      "SR": "50",
+      "SBL": "50",
+      "SBR": "50",
+      "SB": "50",
+      "FHL": "50",
+      "FHR": "50",
+      "TFL": "50",
+      "TFR": "50",
+      "TML": "50",
+      "TMR": "50",
+      "FDL": "50",
+      "FDR": "50",
+      "SDL": "50",
+      "SDR": "50",
+      "FWL": "50",
+      "FWR": "50",
+      "TRL": "50",
+      "TRR": "50",
+      "RHL": "50",
+      "RHR": "50",
+      "BDL": "50",
+      "BDR": "50",
+      "SHL": "50",
+      "SHR": "50",
+      "TS": "50",
+      "SW": "50",
+      "SW2": "50"
+    },
+    "ss_speakers": {
+      "FRO": "LAR",
+      "CEN": "SMA",
+      "SUA": "SMA",
+      "SBK": "2SP",
+      "FRH": "NON",
+      "TFR": "NON",
+      "TPM": "NON",
+      "FRD": "NON",
+      "SUD": "NON",
+      "TPR": "NON",
+      "RHE": "NON",
+      "BKD": "NON",
+      "SHE": "NON",
+      "TPS": "NON",
+      "SWF": "NON"
+    },
+    "standby": "OFF",
+    "surround_mode": "DOLBY AUDIO-DSUR",
+    "video_select": "OFF",
+    "volume": 56
+  }
 }
 ```
 
@@ -378,20 +532,20 @@ yarn dev
 npm run dev
 ```
 
-### Start the interface in dev mode using `receivers.json` to configure AVRs
-
-```bash
-yarn dev:file
-# OR
-npm run dev:file
-```
-
 ### Run discovery (must set IP address as DMQTT_IP in .env file first)
 
 ```bash
 yarn dev:discover
 # OR
 npm run dev:discover
+```
+
+### Start the interface in dev mode using `receivers.json` to configure AVRs
+
+```bash
+yarn dev:file
+# OR
+npm run dev:file
 ```
 
 ## Why Does This Exist?

@@ -20,7 +20,7 @@ describe('TelnetListener', () => {
   describe('addZone()', () => {
     it('should add 2 parsers (one for each zone)', () => {
       const client = new Telnet();
-      const listener = new TelnetListener(client, 2);
+      const listener = new TelnetListener(client, 2, '192.168.1.123');
 
       expect((listener as any).parsers.length).toEqual(2);
     });
@@ -38,7 +38,7 @@ describe('TelnetListener', () => {
       },
     ])('should parse $data', (testData) => {
       const client = new Telnet();
-      const listener = new TelnetListener(client, 2);
+      const listener = new TelnetListener(client, 2, '192.168.1.123');
 
       const result = listener.handle(testData.data);
     });
@@ -47,7 +47,7 @@ describe('TelnetListener', () => {
   describe('read()', () => {
     it('should publish state', async () => {
       const client = new Telnet();
-      const listener = new TelnetListener(client, 2);
+      const listener = new TelnetListener(client, 2, '192.168.1.123');
       const mqttManager = {
         publish: jest.fn(),
         publishState: jest.fn(),

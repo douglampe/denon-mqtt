@@ -1376,10 +1376,10 @@ delegates@^1.0.0:
   resolved "https://registry.yarnpkg.com/delegates/-/delegates-1.0.0.tgz#84c6e159b81904fdca59a0ef44cd870d31250f9a"
   integrity sha512-bd2L678uiWATM6m5Z1VzNCErI3jiGzt6HGY8OVICs40JQq/HALfbyNJmp0UDakEY4pMMaN0Ly5om/B1VI/+xfQ==
 
-denon-state-manager@0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/denon-state-manager/-/denon-state-manager-0.0.3.tgz#792d61d5a2627a3ccb6ff1f97c1f34d9212e73dd"
-  integrity sha512-H8xI6gBs/J28am1QCS8OJQBxqizLAbTpg0SKf1DlfrTcQ56NmsfTLijqcuGkXsf6SnQ70SX9HhgFMHRR0WdI2Q==
+denon-state-manager@0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/denon-state-manager/-/denon-state-manager-0.0.4.tgz#73c7f015722a0ae7e0a793fad62c538844c665f6"
+  integrity sha512-N4Gyjl2ISB8tMWkG20Yoe7L5X64BWSrsJr6XhMj8D+830sIniANf2OMqO9PLbSQ1p/0yw+5Bh+oUEPYtR0Wwlw==
   dependencies:
     axios "^1.7.7"
     node-fetch "^3.3.2"
@@ -3393,10 +3393,10 @@ tar@^6.1.11:
     mkdirp "^1.0.3"
     yallist "^4.0.0"
 
-telnet-client@^2.1.0:
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/telnet-client/-/telnet-client-2.2.1.tgz#a7366b060ba95a7f54c7ffa9a2a17a90c6731dbe"
-  integrity sha512-7LnQG+eohD7GkKi8kwzzuAnGRnfZkvQ6rFoGxQ/WuN47xR9BO+RvbKB8N797zRetP0C4G4CDQUXWguva3cWbVQ==
+telnet-client@^2.2.9:
+  version "2.2.9"
+  resolved "https://registry.yarnpkg.com/telnet-client/-/telnet-client-2.2.9.tgz#2de0b0bb796d6f807bfe9737522747a0fe27ec1a"
+  integrity sha512-tFYiMP5fQxEWBSDDfZ8Kb8YQQW0avz9A83BY4lnA/cjl17XWx3DSLgfMTrQ6/clS+SWrntpYslM5FsdVKteerA==
   dependencies:
     net "^1.0.2"
     stream "^0.0.2"

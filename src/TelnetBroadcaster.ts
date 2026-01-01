@@ -1,3 +1,4 @@
+import { MessageFormatter } from 'denon-state-manager';
 import { Telnet } from 'telnet-client';
 
 export class TelnetBroadcaster {
@@ -12,9 +13,15 @@ export class TelnetBroadcaster {
     }
   }
 
-  async query(): Promise<void> {
-    await this.send(
-      'SI?\rPW?\rMV?\rCV?\rMU?\rZM?\rSR?\rSD?\rDC?\rSV?\rSLP?\rMS?\rZ2?\rZ2MU?\rZ2CS?\rZ2CV?\rZ2HPF?\rZ2QUICK ?\rZ3?\rZ3MU?\rZ3CS?\rZ3CV?\rZ3HPF?\rZ3QUICK ?\rSSSPC ?\rPSCLV ?\rPSSWL ?\rSSLEV ?',
-    );
+  async query(zones: number): Promise<void> {
+    let commands = MessageFormatter.statusRequestCommands;
+
+    if (zones === 1) {
+      commands = commands.filter((c) => !c.startsWith('Z'));
+    } else if (zones === 2) {
+      commands = commands.filter((c) => !c.startsWith('Z3'));
+    }
+
+    await this.send(commands.join('\r'));
   }
 }

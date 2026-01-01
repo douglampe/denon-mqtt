@@ -4,7 +4,6 @@ import { Telnet } from 'telnet-client';
 import { MqttListener } from './MqttListener';
 import { ReceiverManager } from './ReceiverManager';
 import { MqttManager } from './MqttManager';
-import { ReceiverSettings } from 'denon-state-manager';
 
 jest.mock('mqtt', () => {
   return {
@@ -18,70 +17,64 @@ jest.mock('telnet-client', () => {
   };
 });
 
+const receiverConfig = {
+  name: 'Home Theater',
+  id: 'avr_id',
+  ip: '192.168.1.1234',
+  sources: [],
+  zones: [
+    {
+      index: '1',
+      name: 'Main Zone',
+      sources: ['DVD', 'CD'],
+    },
+    {
+      index: '2',
+      name: 'Zone 2',
+      sources: ['DVD', 'CD'],
+    },
+    {
+      index: '3',
+      name: 'Zone 3',
+      sources: ['DVD', 'CD'],
+    },
+  ],
+};
+
 describe('MqttListener', () => {
   beforeEach(() => {
     jest.resetAllMocks();
   });
 
-  describe('getTopic()', () => {
-    it('should return topic', async () => {
-      const listener = new MqttListener({
-        prefix: 'prefix',
-        id: 'avr_id',
-        client: {} as any,
-        receiver: {} as any,
-      });
-      const topic = listener.getTopic('switch', 'power', 1);
-
-      expect(topic).toEqual('prefix/switch/avr_id_main_zone_power/command');
-    });
-  });
-
   describe('listenToZone()', () => {
-    it('should call listenToTopic', async () => {
-      const listener = new MqttListener({
-        prefix: 'prefix',
-        id: 'avr_id',
-        client: {} as any,
-        receiver: {} as any,
-      });
-
-      const mockListenToTopic = jest.spyOn(listener, 'listenToTopic');
-      mockListenToTopic.mockImplementationOnce(async () => {});
-
-      listener.listenToZone('switch', ReceiverSettings.Power, 1);
-
-      expect(mockListenToTopic).toHaveBeenCalledWith('prefix/switch/avr_id_main_zone_power/command');
-    });
-  });
-
-  describe('listenToTopic()', () => {
-    it('should call subscribeAsync()', async () => {
+    it('should subscribe to topic prefix/avr_id/main_zone/command', async () => {
       (connectAsync as jest.Mock).mockResolvedValueOnce({
         on: (event: string, cb: (topic: string, message: Buffer) => void) => {
-          cb('denon/device/command', Buffer.from('REFRESH'));
+          cb('denon/device/command', Buffer.from('{"power":"ON"}'));
         },
         subscribeAsync: jest.fn(),
       });
       const client = await connectAsync('mqtt://foo:123');
       const listener = new MqttListener({
-        prefix: 'denon',
-        id: 'denon',
+        prefix: 'prefix',
+        id: 'avr_id',
         client,
         receiver: {} as any,
       });
-      const mockSubscribe = jest.spyOn(client, 'subscribeAsync');
 
-      await listener.listenToTopic('prefix/switch/avr_id_main_zone_power/command');
-      expect(mockSubscribe).toHaveBeenCalledWith('prefix/switch/avr_id_main_zone_power/command');
+      const mockSubscribeAsync = jest.spyOn(client, 'subscribeAsync');
+
+      listener.listenToZone(1);
+
+      expect(mockSubscribeAsync).toHaveBeenCalledWith('prefix/avr_id/main_zone/command');
     });
   });
 
   describe('listen()', () => {
-    it('should call receiver.query() when REFRESH received on /device/command', async () => {
+    it('should call listentToZone for each zone', async () => {
       (connectAsync as jest.Mock).mockResolvedValueOnce({
         on: (event: string, cb: (topic: string, message: Buffer) => void) => {
-          cb('denon/device/command', Buffer.from('REFRESH'));
+          cb('denon/device/command', Buffer.from('{"power":"ON"}'));
         },
         subscribeAsync: jest.fn(),
       });
@@ -91,40 +84,6 @@ describe('MqttListener', () => {
         send: mockSend,
       });
       const client = await connectAsync('mqtt://foo:123');
-      const receiverConfig = {
-        name: 'Home Theater',
-        id: 'denon',
-        ip: '192.168.1.1234',
-        sources: [
-          {
-            display: 'DVD',
-            code: 'DVD',
-            index: '1',
-          },
-          {
-            display: 'CD',
-            code: 'CD',
-            index: '2',
-          },
-        ],
-        zones: [
-          {
-            index: '1',
-            name: 'Main Zone',
-            sources: ['DVD', 'CD'],
-          },
-          {
-            index: '2',
-            name: 'Zone 2',
-            sources: ['DVD', 'CD'],
-          },
-          {
-            index: '3',
-            name: 'Zone 3',
-            sources: ['DVD', 'CD'],
-          },
-        ],
-      };
       const mqttManager = new MqttManager(client, {
         host: 'localhost',
         port: 1883,
@@ -141,6 +100,46 @@ describe('MqttListener', () => {
         client,
         receiver,
       });
+      const mockListenToZone = jest.spyOn(listener, 'listenToZone');
+
+      await receiver.connect();
+
+      await listener.listen();
+      expect(mockListenToZone).toHaveBeenCalledTimes(3);
+      expect(mockListenToZone).toHaveBeenCalledWith(1);
+      expect(mockListenToZone).toHaveBeenCalledWith(2);
+      expect(mockListenToZone).toHaveBeenCalledWith(3);
+    });
+
+    it('should call receiver.query() when REFRESH received on prefix/id/device/command', async () => {
+      (connectAsync as jest.Mock).mockResolvedValueOnce({
+        on: (event: string, cb: (topic: string, message: Buffer) => void) => {
+          cb('denon/avr_id/device/command', Buffer.from('REFRESH'));
+        },
+        subscribeAsync: jest.fn(),
+      });
+      const mockSend = jest.fn();
+      (Telnet as any as jest.Mock).mockReturnValue({
+        connect: jest.fn(),
+        send: mockSend,
+      });
+      const client = await connectAsync('mqtt://foo:123');
+      const mqttManager = new MqttManager(client, {
+        host: 'localhost',
+        port: 1883,
+        username: 'user',
+        password: 'password',
+        prefix: 'denon',
+        id: 'denon',
+        receiver: receiverConfig,
+      });
+      const receiver = new ReceiverManager(receiverConfig, mqttManager);
+      const listener = new MqttListener({
+        prefix: 'denon',
+        id: 'avr_id',
+        client,
+        receiver,
+      });
       const mockQuery = jest.spyOn(receiver, 'query');
 
       await receiver.connect();
@@ -151,7 +150,7 @@ describe('MqttListener', () => {
     it('should call handleMessage()', async () => {
       (connectAsync as jest.Mock).mockResolvedValueOnce({
         on: (event: string, cb: (topic: string, message: Buffer) => void) => {
-          cb('denon/switch/denon_main_zone_power/command', Buffer.from('{ "raw": "ON", "text": "ON" }'));
+          cb('denon/avr_id/main_zone/command', Buffer.from('{ "power": { "text": "ON" } }'));
         },
         subscribeAsync: jest.fn(),
       });
@@ -161,40 +160,7 @@ describe('MqttListener', () => {
         send: mockSend,
       });
       const client = await connectAsync('mqtt://foo:123');
-      const receiverConfig = {
-        name: 'Home Theater',
-        id: 'denon',
-        ip: '192.168.1.1234',
-        sources: [
-          {
-            display: 'DVD',
-            code: 'DVD',
-            index: '1',
-          },
-          {
-            display: 'CD',
-            code: 'CD',
-            index: '2',
-          },
-        ],
-        zones: [
-          {
-            index: '1',
-            name: 'Main Zone',
-            sources: ['DVD', 'CD'],
-          },
-          {
-            index: '2',
-            name: 'Zone 2',
-            sources: ['DVD', 'CD'],
-          },
-          {
-            index: '3',
-            name: 'Zone 3',
-            sources: ['DVD', 'CD'],
-          },
-        ],
-      };
+
       const mqttManager = new MqttManager(client, {
         host: 'localhost',
         port: 1883,
@@ -215,7 +181,46 @@ describe('MqttListener', () => {
 
       await receiver.connect();
       await listener.listen();
-      expect(mockHandleMessage).toHaveBeenCalledWith(ReceiverSettings.Power, '{ "raw": "ON", "text": "ON" }', 1);
+      expect(mockHandleMessage).toHaveBeenCalledWith(1, '{ "power": { "text": "ON" } }');
+    });
+  });
+
+  describe('handleMessage()', () => {
+    it.each([
+      { zone: 1, body: JSON.stringify({ power: { text: 'ON' } }), command: 'ZMON' },
+      { zone: 1, body: JSON.stringify({ volume: { numeric: 55 } }), command: 'MV55' },
+      { zone: 1, body: JSON.stringify({ channel_volume: { key: 'C', value: '55' } }), command: 'CVC 55' },
+      { zone: 2, body: JSON.stringify({ power: { text: 'ON' } }), command: 'Z2ON' },
+    ])('should send $command for payload $body on zone $zone', async (testData) => {
+      (connectAsync as jest.Mock).mockResolvedValueOnce({
+        on: (event: string, cb: (topic: string, message: Buffer) => void) => {
+          cb('denon/avr_id/main_zone/command', Buffer.from('{ "power": { "text": "ON" } }'));
+        },
+      });
+      const client = await connectAsync('mqtt://foo:123');
+      const mqttManager = new MqttManager(client, {
+        host: 'localhost',
+        port: 1883,
+        username: 'user',
+        password: 'password',
+        prefix: 'denon',
+        id: 'denon',
+        receiver: receiverConfig,
+      });
+      const receiver = new ReceiverManager(receiverConfig, mqttManager);
+      const listener = new MqttListener({
+        prefix: 'denon',
+        id: 'denon',
+        client,
+        receiver,
+      });
+
+      const mockSend = jest.spyOn(receiver, 'send');
+      mockSend.mockImplementationOnce(async () => {});
+
+      await listener.handleMessage(testData.zone, testData.body);
+
+      expect(mockSend).toHaveBeenCalledWith(testData.command);
     });
   });
 });

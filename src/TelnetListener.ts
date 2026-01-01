@@ -1,17 +1,18 @@
 import { MainParser, ReceiverSettings, ReceiverState, ZoneParser } from 'denon-state-manager';
 import { Telnet } from 'telnet-client';
 
-import { MqttUpdate } from './MqttUpdate';
-import { MqttBroadcaster } from './MqttBroadcaster';
 import { MqttManager } from './MqttManager';
+import { MqttUpdate } from './MqttUpdate';
 
 export class TelnetListener {
   private client: Telnet;
   private parsers: Array<MainParser | ZoneParser> = [];
   private states: ReceiverState[] = [];
+  private ip: string;
 
-  constructor(client: Telnet, zones: number) {
+  constructor(client: Telnet, zones: number, ip: string) {
     this.client = client;
+    this.ip = ip;
 
     for (let i = 0; i < zones; i++) {
       this.addZone();
@@ -37,6 +38,7 @@ export class TelnetListener {
           key: result.key ?? ReceiverSettings.None,
           value: result.value,
           zone,
+          ip: this.ip,
         };
       }
     }
@@ -49,7 +51,7 @@ export class TelnetListener {
 
       for await (const line of lines) {
         if (line !== '') {
-          console.debug('Received:', line);
+          console.debug(`[TELNET:${this.ip}] Received: ${line}`);
           const result = this.handle(line);
           if (result) {
             await mqttManager.publish(result);
@@ -57,7 +59,7 @@ export class TelnetListener {
             state.updateState(result.key, result.value);
             await mqttManager.publishState(state, result.zone);
           } else {
-            console.debug('Unhandled:', line);
+            console.debug(`[TELNET:${this.ip}] Unhandled: ${line}`);
           }
         }
       }
