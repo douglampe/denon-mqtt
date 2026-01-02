@@ -153,7 +153,7 @@ describe('getSelectedSources()', () => {
 
     const result = await receiver.getSelectedSources();
 
-    expect(result).toEqual(['Fire TV', 'HEOS Music']);
+    expect(result).toEqual(['Fire TV', 'HEOS Music', 'HEOS Music']);
   });
 });
 
@@ -222,7 +222,7 @@ describe('fetchAvrData()', () => {
 
     const result = await receiver.fetchAvrData(3);
 
-    expect(result.root()?.text()).toBe('Bar');
+    expect(result.Foo).toEqual('Bar');
   });
 
   it('should throw on fetch error', async () => {

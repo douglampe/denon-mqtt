@@ -1,8 +1,7 @@
-import libxmljs from 'libxmljs';
 import { Telnet } from 'telnet-client';
+import { XMLParser } from 'fast-xml-parser';
 
 import { ReceiverConfig } from './ReceiverConfig';
-import { TelnetBroadcaster } from './TelnetBroadcaster';
 
 export class ReceiverDiscovery {
   private config: ReceiverConfig;
@@ -58,7 +57,7 @@ export class ReceiverDiscovery {
   async discoverName() {
     const friendlyName = await this.fetchAvrData(3);
 
-    const name = friendlyName.root()?.text();
+    const name = friendlyName.FriendlyName;
     if (name) {
       this.config.name = name;
       this.config.id = name.replace(new RegExp(/\W+/), '_').toLowerCase();
@@ -68,18 +67,15 @@ export class ReceiverDiscovery {
   async discoverZones() {
     const zoneNames = await this.fetchAvrData(6);
 
-    const zoneNamesRoot = zoneNames.root();
+    const zoneRename = zoneNames.ZoneRename as Record<string, string>;
 
-    for (let i = 0; zoneNamesRoot && i < zoneNamesRoot.childNodes().length; i++) {
-      const name = zoneNamesRoot.child(i)?.text();
-
-      if (name) {
-        const zone = this.config.zones.find((z) => z.index === (i + 1).toString());
-        if (zone) {
-          zone.name = name;
-        } else {
-          this.config.zones.push({ index: (i + 1).toString(), name, sources: [] });
-        }
+    for (const [zoneKey, name] of Object.entries(zoneRename)) {
+      const zoneIndex = zoneKey === 'MainZone' ? '1' : zoneKey.substring(4);
+      const zone = this.config.zones.find((z) => z.index === zoneIndex);
+      if (zone) {
+        zone.name = name;
+      } else {
+        this.config.zones.push({ index: zoneIndex, name, sources: [] });
       }
     }
   }
@@ -87,29 +83,27 @@ export class ReceiverDiscovery {
   async discoverSources() {
     const sourceList = await this.fetchAvrData(7);
 
-    const sourceListRoot = sourceList.root();
+    const sourceListRoot = sourceList.SourceList;
+    const zones = sourceListRoot?.Zone;
 
-    for (let i = 0; sourceListRoot && i < sourceListRoot.childNodes().length; i++) {
-      const zoneSources = sourceListRoot.child(i);
+    for (let i = 0; zones && i < zones.length; i++) {
+      const discoveredZone = zones[i];
+      const zoneIndex = discoveredZone['@_index'];
 
-      if (zoneSources) {
-        const zoneIndex = zoneSources?.getAttribute('zone')?.value();
+      const zone = this.config.zones.find((z) => z.index == zoneIndex);
 
-        const zone = this.config.zones.find((z) => z.index == zoneIndex);
+      if (zone && discoveredZone.Source) {
+        for (let j = 0; j < discoveredZone.Source.length; j++) {
+          const source = discoveredZone.Source[j];
+          const display = source.Name;
+          const index = source['@_index'];
 
-        if (zone) {
-          for (let j = 0; j < zoneSources?.childNodes().length; j++) {
-            const sourceXml = zoneSources?.child(j);
-            const display = sourceXml?.text();
-            const index = sourceXml?.getAttribute('index')?.value();
-
-            if (display && index) {
-              zone.sources.push(index);
-              const source = this.config.sources.find((s) => s.index === index);
-              if (source) {
-                source.display = display;
-              } else this.config.sources.push({ index, display, code: 'UNKNOWN' });
-            }
+          if (display && index) {
+            zone.sources.push(index);
+            const source = this.config.sources.find((s) => s.index === index);
+            if (source) {
+              source.display = display;
+            } else this.config.sources.push({ index, display, code: 'UNKNOWN' });
           }
         }
       }
@@ -182,12 +176,13 @@ export class ReceiverDiscovery {
   }
 
   async getSelectedSources() {
-    const selectedSourcesXml = await this.fetchAvrData(1, 'home');
     const selectedSources: string[] = [];
+    const selectedSourcesXml = await this.fetchAvrData(1, 'home');
 
-    for (let i = 0; selectedSourcesXml && i < this.config.zones.length; i++) {
-      const name = selectedSourcesXml.child(i)?.child(1)?.text();
+    for (const [_zoneKey, source] of Object.entries(selectedSourcesXml.listHomeMenu)) {
+      const name = (source as any).SourceName;
 
+      console.log(name);
       if (name) {
         selectedSources.push(name);
       }
@@ -235,7 +230,9 @@ export class ReceiverDiscovery {
     }
 
     const body = await result.text();
-    const xml = await libxmljs.parseXmlAsync(body);
+    const parser = new XMLParser({ ignoreAttributes: false });
+    const xml = await parser.parse(body);
+    console.debug(JSON.stringify(xml, null, 2));
 
     return xml;
   }
