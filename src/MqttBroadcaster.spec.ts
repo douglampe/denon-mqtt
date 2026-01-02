@@ -122,9 +122,14 @@ describe('MqttBroadcaster', () => {
         topic: 'prefix/avr_id/main_zone/state',
         payload: JSON.stringify({ channel_setting: { key: 'FL', value: '50' } }),
       },
-      { key: ReceiverSettings.Volume, zone: 2, value: { raw: '55', numeric: 55 }, 
+      {
+        key: ReceiverSettings.Volume,
+        zone: 2,
+        value: { raw: '55', numeric: 55 },
         ip: '192.168.1.123',
-      topic: 'prefix/avr_id/zone2/state', payload: JSON.stringify({ volume: 55 }) },
+        topic: 'prefix/avr_id/zone2/state',
+        payload: JSON.stringify({ volume: 55 }),
+      },
     ])('should publish to payload $payload to $topic', async (testData) => {
       (connectAsync as jest.Mock).mockResolvedValueOnce({
         publish: mockPublish,
