@@ -1,8 +1,0 @@
-    - name: "Living Room Audio State"
-      object_id: denon_main_zone_state
-      state_topic: "denon/switch/denon_main_zone_power/state"
-      json_attributes_topic: "denon/sensor/denon_main_zone_state/state"
-    - name: "Living Room Audio Volume Percent"
-      object_id: denon_main_zone_volume_percent
-      state_topic: "denon/volume/denon_main_zone_volume/state"
-      value_template: "{{ (value | float)*0.01 }}"
