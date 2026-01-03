@@ -47,6 +47,9 @@ export class MqttListener {
   }
 
   public async listen() {
+    const deviceTopic = `${this.options.prefix}/${this.options.id}/device/command`;
+    await this.options.client.subscribeAsync(deviceTopic);
+
     for (let i = 1; i <= this.options.receiver.options.zones.length; i++) {
       const zone = this.options.receiver.options.zones[i - 1];
 
@@ -59,7 +62,7 @@ export class MqttListener {
       const body = message.toString();
       console.debug(`MQTT Message on topic ${topic}:`, body);
 
-      if (topic === `${this.options.prefix}/${this.options.id}/device/command`) {
+      if (topic === deviceTopic) {
         if (body === 'REFRESH') {
           await this.options.receiver.query();
         }
