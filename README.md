@@ -281,6 +281,11 @@ The following payloads formats are required for each listed setting:
 - video_select_source
 - hpf
 - quick_select
+- refresh
+
+> [!NOTE]
+> Note: the `refresh` setting is used to request the latest settings from the specified zone. The text value of the
+> payload for `refresh` is ignored, but should follow the syntax (ex: `{ "refresh": { "text": "ON" }}`).
 
 **Schema:**
 ```json

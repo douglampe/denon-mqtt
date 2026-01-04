@@ -35,7 +35,13 @@ export class ReceiverManager {
   }
 
   public async query() {
-    await this.broadcaster.query(this.options.zones.length);
+    for (let i = 1; i <= this.options.zones.length; i++) {
+      await this.broadcaster.query(i);
+    }
+  }
+
+  public async queryZone(zone: number) {
+    await this.broadcaster.query(zone);
   }
 
   public async read() {

@@ -33,7 +33,7 @@
   "homepage": "https://github.com/douglampe/denon-mqtt#readme",
   "dependencies": {
     "commander": "^14.0.2",
-    "denon-state-manager": "0.0.4",
+    "denon-state-manager": "0.0.5",
     "dotenv": "^17.2.3",
     "fast-xml-parser": "^5.3.3",
     "mqtt": "^5.14.1",
