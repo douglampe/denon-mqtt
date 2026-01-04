@@ -60,7 +60,7 @@ export class MqttListener {
 
     this.options.client.on('message', async (topic, message) => {
       const body = message.toString();
-      console.debug(`MQTT Message on topic ${topic}:`, body);
+      console.debug(`[MQTT:${topic}]<-`, body);
 
       if (topic === deviceTopic) {
         if (body === 'REFRESH') {
@@ -93,7 +93,7 @@ export class MqttListener {
         if (avrCommand) {
           await this.options.receiver.send(avrCommand);
         } else {
-          console.debug(`No message translation found for command ${ReceiverSettings[setting]} for zone ${zone} or error parsing value:`, value);
+          console.error(`No message translation found for command ${ReceiverSettings[setting]} for zone ${zone} or error parsing value:`, value);
         }
       }
     }

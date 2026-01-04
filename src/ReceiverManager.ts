@@ -27,11 +27,11 @@ export class ReceiverManager {
       sendTimeout: undefined,
     });
 
-    console.debug(`Connected to Receiver "${this.options.name} on ${this.options.ip}`);
+    console.log(`Connected to Receiver "${this.options.name} on ${this.options.ip}`);
 
     this.listener = new TelnetListener(telnetClient, this.options.zones.length, this.options.ip);
 
-    this.broadcaster = new TelnetBroadcaster(telnetClient);
+    this.broadcaster = new TelnetBroadcaster(telnetClient, this.options.ip);
   }
 
   public async query() {

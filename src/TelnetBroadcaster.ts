@@ -2,12 +2,20 @@ import { MessageFormatter } from 'denon-state-manager';
 import { Telnet } from 'telnet-client';
 
 export class TelnetBroadcaster {
-  constructor(private client: Telnet) {}
+  constructor(private client: Telnet, private ip: string) {}
 
   async send(data: string): Promise<void> {
     try {
       await this.client.send(data);
-      console.debug('Sent:', data.replace(/\r/g, '\r\n'));
+      const lines: string[] = [];
+      if (data.indexOf('\r') >= 0 && data.indexOf('\r') < data.length - 1) {
+        lines.push(...data.split('\r'));
+      } else {
+        lines.push(data);
+      }
+      lines.forEach(line => {
+        console.log(`[TELNET:${this.ip}]:->${line}`);
+      })
     } catch (err) {
       console.error(err);
     }

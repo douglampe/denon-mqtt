@@ -51,7 +51,7 @@ export class TelnetListener {
 
       for await (const line of lines) {
         if (line !== '') {
-          console.debug(`[TELNET:${this.ip}] Received: ${line}`);
+          console.debug(`[TELNET:${this.ip}]<-${line}`);
           const result = this.handle(line);
           if (result) {
             await mqttManager.publish(result);
@@ -59,7 +59,7 @@ export class TelnetListener {
             state.updateState(result.key, result.value);
             await mqttManager.publishState(state, result.zone);
           } else {
-            console.debug(`[TELNET:${this.ip}] Unhandled: ${line}`);
+            console.debug(`[TELNET:${this.ip}]!-Unhandled: ${line}`);
           }
         }
       }

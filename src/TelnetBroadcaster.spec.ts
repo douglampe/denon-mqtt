@@ -16,7 +16,7 @@ describe('TelnetBroadcaster', () => {
     it('should call client.send', async () => {
       const client = new Telnet();
       const mockSend = jest.spyOn(client, 'send');
-      const broadcaster = new TelnetBroadcaster(client);
+      const broadcaster = new TelnetBroadcaster(client, '192.168.1.123');
       await broadcaster.send('SI?');
       expect(mockSend).toHaveBeenCalledWith('SI?');
     });
@@ -25,7 +25,7 @@ describe('TelnetBroadcaster', () => {
     it('should call client.send with main zone query commands', async () => {
       const client = new Telnet();
       const mockSend = jest.spyOn(client, 'send');
-      const broadcaster = new TelnetBroadcaster(client);
+      const broadcaster = new TelnetBroadcaster(client, '192.168.1.123');
       await broadcaster.query(1);
       expect(mockSend).toHaveBeenCalledWith(
         [
@@ -54,7 +54,7 @@ describe('TelnetBroadcaster', () => {
     it('should call client.send with zone query commands', async () => {
       const client = new Telnet();
       const mockSend = jest.spyOn(client, 'send');
-      const broadcaster = new TelnetBroadcaster(client);
+      const broadcaster = new TelnetBroadcaster(client, '192.168.1.123');
       await broadcaster.query(2);
       expect(mockSend).toHaveBeenCalledWith(['Z2?', 'Z2MU?', 'Z2CS?', 'Z2CV?', 'Z2HPF?', 'Z2QUICK ?'].join('\r'));
     });
