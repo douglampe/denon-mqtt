@@ -26,7 +26,7 @@ export class Orchestrator {
       password: this.options.password,
     });
 
-    console.debug('Connected to MQTT');
+    console.log('Connected to MQTT');
 
     this.mqttClient.on('error', (err) => {
       console.error(err);

@@ -252,7 +252,7 @@ export class ReceiverDiscovery {
       throw new Error(`Error: No response received with prefix ${prefix}.`);
     }
 
-    console.debug(`Received response: ${result}`);
+    console.log(`[TELNET:${this.config.ip}]<-${result}`);
 
     return result;
   }

@@ -98,7 +98,7 @@ export class MqttBroadcaster {
 
     const message = JSON.stringify(payload);
 
-    console.debug(`[MQTT:${topic}] ${message}`);
+    console.log(`[MQTT:${topic}]->${message}`);
     this.options.client.publish(topic, message);
   }
 
@@ -107,7 +107,7 @@ export class MqttBroadcaster {
 
     const topic = this.getTopic(zone);
 
-    console.debug(`[MQTT:${topic}] ${message}`);
+    console.log(`[MQTT:${topic}]->${message}`);
     this.options.client.publish(topic, message);
 
     return Promise.resolve();
