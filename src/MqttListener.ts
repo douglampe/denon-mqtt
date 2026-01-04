@@ -79,16 +79,22 @@ export class MqttListener {
   }
 
   async handleMessage(zone: number, body: string) {
-    const payload = JSON.parse(body) as Record<ReceiverSettings, StateValue>;
+    const payload = JSON.parse(body) as Record<string, StateValue>;
+
+    if (payload.refresh) {
+      await this.options.receiver.queryZone(zone);
+    }
 
     for (const [key, value] of Object.entries(payload)) {
-      const setting = TopicMap[key];
-      console.debug(`Parsing setting ${setting} and value ${JSON.stringify(value)}`);
-      const avrCommand = zone === 1 ? MessageFormatter.getCommand(setting, value) : MessageFormatter.getCommand(setting, value, zone);
-      if (avrCommand) {
-        await this.options.receiver.send(avrCommand);
-      } else {
-        console.debug(`No message translation found for command ${ReceiverSettings[setting]} for zone ${zone} or error parsing value:`, value);
+      if (key !== 'refresh') {
+        const setting = TopicMap[key];
+        console.debug(`Parsing setting ${setting} and value ${JSON.stringify(value)}`);
+        const avrCommand = zone === 1 ? MessageFormatter.getCommand(setting, value) : MessageFormatter.getCommand(setting, value, zone);
+        if (avrCommand) {
+          await this.options.receiver.send(avrCommand);
+        } else {
+          console.debug(`No message translation found for command ${ReceiverSettings[setting]} for zone ${zone} or error parsing value:`, value);
+        }
       }
     }
   }

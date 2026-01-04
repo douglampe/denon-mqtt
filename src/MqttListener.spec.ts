@@ -147,6 +147,42 @@ describe('MqttListener', () => {
       expect(mockQuery).toHaveBeenCalled();
     });
 
+    it('should call receiver.queryZone() when { "refresh": { "text": "ON" } } received on prefix/id/main_zone/command', async () => {
+      (connectAsync as jest.Mock).mockResolvedValueOnce({
+        on: (event: string, cb: (topic: string, message: Buffer) => void) => {
+          cb('denon/avr_id/main_zone/command', Buffer.from('{ "refresh": { "text": "ON" } }'));
+        },
+        subscribeAsync: jest.fn(),
+      });
+      const mockSend = jest.fn();
+      (Telnet as any as jest.Mock).mockReturnValue({
+        connect: jest.fn(),
+        send: mockSend,
+      });
+      const client = await connectAsync('mqtt://foo:123');
+      const mqttManager = new MqttManager(client, {
+        host: 'localhost',
+        port: 1883,
+        username: 'user',
+        password: 'password',
+        prefix: 'denon',
+        id: 'denon',
+        receiver: receiverConfig,
+      });
+      const receiver = new ReceiverManager(receiverConfig, mqttManager);
+      const listener = new MqttListener({
+        prefix: 'denon',
+        id: 'avr_id',
+        client,
+        receiver,
+      });
+      const mockQuery = jest.spyOn(receiver, 'queryZone');
+
+      await receiver.connect();
+      await listener.listen();
+      expect(mockQuery).toHaveBeenCalledWith(1);
+    });
+
     it('should call handleMessage()', async () => {
       (connectAsync as jest.Mock).mockResolvedValueOnce({
         on: (event: string, cb: (topic: string, message: Buffer) => void) => {

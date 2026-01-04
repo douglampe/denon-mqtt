@@ -13,14 +13,8 @@ export class TelnetBroadcaster {
     }
   }
 
-  async query(zones: number): Promise<void> {
-    let commands = MessageFormatter.statusRequestCommands;
-
-    if (zones === 1) {
-      commands = commands.filter((c) => !c.startsWith('Z'));
-    } else if (zones === 2) {
-      commands = commands.filter((c) => !c.startsWith('Z3'));
-    }
+  async query(zone: number): Promise<void> {
+    let commands = MessageFormatter.getZoneStatusRequestCommands(zone);
 
     await this.send(commands.join('\r'));
   }
