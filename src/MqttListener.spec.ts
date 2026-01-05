@@ -209,7 +209,7 @@ describe('MqttListener', () => {
       const receiver = new ReceiverManager(receiverConfig, mqttManager);
       const listener = new MqttListener({
         prefix: 'denon',
-        id: 'denon',
+        id: 'avr_id',
         client,
         receiver,
       });
@@ -218,6 +218,43 @@ describe('MqttListener', () => {
       await receiver.connect();
       await listener.listen();
       expect(mockHandleMessage).toHaveBeenCalledWith(1, '{ "power": { "text": "ON" } }');
+    });
+
+    it('should not call handleMessage if topic does not match ()', async () => {
+      (connectAsync as jest.Mock).mockResolvedValueOnce({
+        on: (event: string, cb: (topic: string, message: Buffer) => void) => {
+          cb('denon/different_avr_id/main_zone/command', Buffer.from('{ "power": { "text": "ON" } }'));
+        },
+        subscribeAsync: jest.fn(),
+      });
+      const mockSend = jest.fn();
+      (Telnet as any as jest.Mock).mockReturnValue({
+        connect: jest.fn(),
+        send: mockSend,
+      });
+      const client = await connectAsync('mqtt://foo:123');
+
+      const mqttManager = new MqttManager(client, {
+        host: 'localhost',
+        port: 1883,
+        username: 'user',
+        password: 'password',
+        prefix: 'denon',
+        id: 'denon',
+        receiver: receiverConfig,
+      });
+      const receiver = new ReceiverManager(receiverConfig, mqttManager);
+      const listener = new MqttListener({
+        prefix: 'denon',
+        id: 'avr_id',
+        client,
+        receiver,
+      });
+      const mockHandleMessage = jest.spyOn(listener, 'handleMessage');
+
+      await receiver.connect();
+      await listener.listen();
+      expect(mockHandleMessage).not.toHaveBeenCalled();
     });
   });
 

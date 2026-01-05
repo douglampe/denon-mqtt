@@ -59,6 +59,10 @@ export class MqttListener {
     }
 
     this.options.client.on('message', async (topic, message) => {
+      if (!topic.startsWith(`${this.options.prefix}/${this.options.id}/`)) {
+        return;
+      }
+      
       const body = message.toString();
       console.debug(`[MQTT:${topic}]<-`, body);
 

@@ -1,6 +1,6 @@
 {
   "name": "denon-mqtt",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "MQTT Provider for Denon Receivers",
   "main": "dist/entryPoint.js",
   "bin": {
