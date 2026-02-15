@@ -265,6 +265,17 @@ The `id` value for the AVR is used in the names of MQTT topics and must be uniqu
 In addition to the below topics and payloads, you can request updated status data from the receiver by posting a text
 payload of `REFRESH` to topic `{prefix}/{id}/device/command`.
 
+### Availability Topic and Payload
+
+The topic for all availability is `{prefix}/{id}/{zone}/{suffix}` where `{prefix}` is the global prefix
+(default: `denon`), `{id}` is the unique identifier of the AVR, `{zone}` is the zone identifier 
+(`main_zone`, `zone1`, `zone2`), and `{suffix}` is the availability topic as configured on launch.
+
+The payload for availability is `{ available: {availability} }` where `{availability}` is `true` if the Telnet 
+connection to the receiver is available, otherwise `false`. A `true` value is sent when the telnet connection
+is established and whenever a message is received from the recewiver. A `false` value is sent whenever the
+Telnet session disconnects or an error occurs reading from the Telnet connection.
+
 ### Command Topic and Payload
 
 The topic for all commands is `{prefix}/{id}/{zone}/command` where `{prefix}` is the global prefix (default: `denon`), 
@@ -339,9 +350,9 @@ The following payloads formats are required for each listed setting:
 
 ### State Topic and Payload
 
-All state changes are published to `{prefix}/{id}/{zone}/state` where `{prefix}` is the global prefix (default:
-`denon`), `{id}` is the unique identifier of the AVR, and `{zone}` is the zone identifier (`main_zone`, `zone1`, 
-`zone2`).
+All state changes are published to `{prefix}/{id}/{zone}/{suffix}` where `{prefix}` is the global prefix 
+(default: `denon`), `{id}` is the unique identifier of the AVR, `{zone}` is the zone identifier 
+(`main_zone`, `zone1`, `zone2`), and `{suffix}` is the state topic as configured at launch.
 
 The payload syntax varies based on the setting updated as follows:
 
