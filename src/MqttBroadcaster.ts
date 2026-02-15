@@ -121,7 +121,7 @@ export class MqttBroadcaster {
   }
 
   public async publishAvailability(availability: boolean, zone: number): Promise<void> {
-    const message = JSON.stringify({ availability });
+    const message = JSON.stringify({ available: availability });
 
     const topic = this.getTopic(zone, this.options.availabilityTopic);
 

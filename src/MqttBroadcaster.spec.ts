@@ -194,6 +194,27 @@ describe('MqttBroadcaster', () => {
     });
   });
 
+  describe('publishAvailability()', () => {
+    it('should call send for main zone', async () => {
+      const state = new ReceiverState();
+      state.updateState(ReceiverSettings.Volume, { raw: '55', numeric: 55 });
+      (connectAsync as jest.Mock).mockResolvedValueOnce({
+        publish: mockPublish,
+      });
+      const client = await connectAsync('mqtt://foo:123');
+      const broadcaster = new MqttBroadcaster({
+        prefix: 'prefix',
+        id: 'avr_id',
+        client,
+        availabilityTopic: 'availability',
+        stateTopic: 'state',
+        changeTopic: 'change',
+      });
+      await broadcaster.publishAvailability(true, 1);
+      expect(mockPublish).toHaveBeenCalledWith('prefix/avr_id/main_zone/availability', '{"available":true}');
+    });
+  });
+
   describe('publishState()', () => {
     it('should call send for main zone', async () => {
       const state = new ReceiverState();

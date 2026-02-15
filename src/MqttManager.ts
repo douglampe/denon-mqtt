@@ -59,6 +59,10 @@ export class MqttManager {
     return this.broadcaster.publishAvailability(available, zone);
   }
 
+  publishConnectionLost() {
+    Promise.all(this.options.receiver.zones.map((zone) => this.broadcaster.publishAvailability(false, parseInt(zone.index) + 1)));
+  }
+
   publishState(state: ReceiverState, zone: number) {
     return this.broadcaster.publishState(state, zone);
   }
