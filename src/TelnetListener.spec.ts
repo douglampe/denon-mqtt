@@ -50,6 +50,7 @@ describe('TelnetListener', () => {
       const listener = new TelnetListener(client, 2, '192.168.1.123');
       const mqttManager = {
         publish: jest.fn(),
+        publishAvailability: jest.fn(),
         publishState: jest.fn(),
       } as any;
 
@@ -60,6 +61,8 @@ describe('TelnetListener', () => {
       await listener.read(mqttManager);
 
       expect(mqttManager.publish).toHaveBeenCalled();
+      expect(mqttManager.publishAvailability).toHaveBeenCalled();
+      expect(mqttManager.publishState).toHaveBeenCalled();
     });
   });
 });

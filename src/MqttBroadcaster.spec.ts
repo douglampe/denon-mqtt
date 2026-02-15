@@ -30,11 +30,12 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        availabilityTopic: 'availability',
         stateTopic: 'state',
         changeTopic: 'change',
       });
 
-      const result = broadcaster.getTopic(1);
+      const result = broadcaster.getTopic(1, 'state');
 
       expect(result).toEqual('prefix/avr_id/main_zone/state');
     });
@@ -45,11 +46,12 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        availabilityTopic: 'availability',
         stateTopic: 'state',
         changeTopic: 'change',
       });
 
-      const result = broadcaster.getTopic(2);
+      const result = broadcaster.getTopic(2, 'state');
 
       expect(result).toEqual('prefix/avr_id/zone2/state');
     });
@@ -60,11 +62,12 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        availabilityTopic: 'availability',
         stateTopic: 'state',
         changeTopic: 'change',
       });
 
-      const result = broadcaster.getTopic(2, true);
+      const result = broadcaster.getTopic(2, 'change');
 
       expect(result).toEqual('prefix/avr_id/zone2/change');
     });
@@ -99,6 +102,7 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        availabilityTopic: 'availability',
         stateTopic: 'state',
         changeTopic: 'change',
       });
@@ -160,6 +164,7 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        availabilityTopic: 'availability',
         stateTopic: 'state',
         changeTopic: 'change',
       });
@@ -176,6 +181,7 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        availabilityTopic: 'availability',
         stateTopic: 'state',
         changeTopic: 'change',
       });
@@ -200,6 +206,7 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        availabilityTopic: 'availability',
         stateTopic: 'state',
         changeTopic: 'change',
       });

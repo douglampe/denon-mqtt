@@ -54,6 +54,7 @@ export class TelnetListener {
           console.debug(`[TELNET:${this.ip}]<-${line}`);
           const result = this.handle(line);
           if (result) {
+            await mqttManager.publishAvailability(true, result.zone);
             await mqttManager.publish(result);
             const state = this.states[result.zone - 1];
             state.updateState(result.key, result.value);

@@ -11,6 +11,7 @@ export interface OrchestratorOptions {
   username: string;
   password: string;
   prefix: string;
+  availabilityTopic: string;
   stateTopic: string;
   changeTopic: string;
 }
@@ -50,6 +51,7 @@ export class Orchestrator {
       password: this.options.password,
       prefix: this.options.prefix,
       id: receiver.id,
+      availabilityTopic: this.options.availabilityTopic,
       stateTopic: this.options.stateTopic,
       changeTopic: this.options.changeTopic,
       receiver,
