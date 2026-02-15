@@ -15,6 +15,7 @@ export interface MqttManagerOptions {
   prefix: string;
   id: string;
   receiver: ReceiverConfig;
+  availabilityTopic: string;
   stateTopic: string;
   changeTopic: string;
 }
@@ -32,6 +33,7 @@ export class MqttManager {
       prefix: this.options.prefix,
       id: this.options.receiver.id,
       client: this.mqttClient,
+      availabilityTopic: this.options.availabilityTopic,
       stateTopic: this.options.stateTopic,
       changeTopic: this.options.changeTopic,
     });
@@ -50,6 +52,18 @@ export class MqttManager {
     // we only publish to the broadcaster matching the receiver IP.
     if (update.ip === this.options.receiver.ip) {
       await this.broadcaster.publish(update);
+    }
+  }
+
+  publishAvailability(available: boolean, zone?: number) {
+    if (!this.broadcaster) {
+      return;
+    }
+    
+    if (zone) {
+      return this.broadcaster.publishAvailability(available, zone);
+    } else {
+      return Promise.all(this.options.receiver.zones.map((z) => this.broadcaster.publishAvailability(available, parseInt(z.index) + 1)));
     }
   }
 

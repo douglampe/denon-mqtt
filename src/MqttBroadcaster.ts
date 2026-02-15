@@ -8,6 +8,7 @@ export interface MqttBroadcasterOptions {
   prefix: string;
   id: string;
   client: MqttClient;
+  availabilityTopic: string;
   stateTopic: string;
   changeTopic: string;
 }
@@ -41,15 +42,15 @@ export class MqttBroadcaster {
   public static DefaultOptions = {
     prefix: 'denon',
     id: 'denon',
+    availabilityTopic: 'availability',
     stateTopic: 'state',
     changeTopic: 'state',
   };
 
   constructor(private options: MqttBroadcasterOptions) {}
 
-  public getTopic(zone: number, change = false): string {
+  public getTopic(zone: number, suffix: string): string {
     const zonePrefix = zone == 1 ? 'main_zone' : `zone${zone}`;
-    const suffix = change ? this.options.changeTopic : this.options.stateTopic;
     return `${this.options.prefix}/${this.options.id}/${zonePrefix}/${suffix}`;
   }
 
@@ -100,7 +101,7 @@ export class MqttBroadcaster {
         break;
     }
 
-    const topic = this.getTopic(update.zone, true);
+    const topic = this.getTopic(update.zone, this.options.changeTopic);
 
     const message = JSON.stringify(payload);
 
@@ -111,7 +112,18 @@ export class MqttBroadcaster {
   public async publishState(state: ReceiverState, zone: number): Promise<void> {
     const message = JSON.stringify({ state: this.getStateWithKeys(state.state) });
 
-    const topic = this.getTopic(zone, false);
+    const topic = this.getTopic(zone, this.options.stateTopic);
+
+    console.log(`[MQTT:${topic}]->${message}`);
+    this.options.client.publish(topic, message);
+
+    return Promise.resolve();
+  }
+
+  public async publishAvailability(availability: boolean, zone: number): Promise<void> {
+    const message = JSON.stringify({ available: availability });
+
+    const topic = this.getTopic(zone, this.options.availabilityTopic);
 
     console.log(`[MQTT:${topic}]->${message}`);
     this.options.client.publish(topic, message);

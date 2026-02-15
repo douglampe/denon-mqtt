@@ -9,10 +9,12 @@ export class TelnetListener {
   private parsers: Array<MainParser | ZoneParser> = [];
   private states: ReceiverState[] = [];
   private ip: string;
+  private zones: number;
 
   constructor(client: Telnet, zones: number, ip: string) {
     this.client = client;
     this.ip = ip;
+    this.zones = zones;
 
     for (let i = 0; i < zones; i++) {
       this.addZone();
@@ -54,6 +56,7 @@ export class TelnetListener {
           console.debug(`[TELNET:${this.ip}]<-${line}`);
           const result = this.handle(line);
           if (result) {
+            await mqttManager.publishAvailability(true, result.zone);
             await mqttManager.publish(result);
             const state = this.states[result.zone - 1];
             state.updateState(result.key, result.value);
@@ -65,6 +68,7 @@ export class TelnetListener {
       }
     } catch (err) {
       console.error(err);
+      await mqttManager.publishAvailability(false);
     }
   }
 }

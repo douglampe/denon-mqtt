@@ -30,11 +30,12 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        availabilityTopic: 'availability',
         stateTopic: 'state',
         changeTopic: 'change',
       });
 
-      const result = broadcaster.getTopic(1);
+      const result = broadcaster.getTopic(1, 'state');
 
       expect(result).toEqual('prefix/avr_id/main_zone/state');
     });
@@ -45,11 +46,12 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        availabilityTopic: 'availability',
         stateTopic: 'state',
         changeTopic: 'change',
       });
 
-      const result = broadcaster.getTopic(2);
+      const result = broadcaster.getTopic(2, 'state');
 
       expect(result).toEqual('prefix/avr_id/zone2/state');
     });
@@ -60,11 +62,12 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        availabilityTopic: 'availability',
         stateTopic: 'state',
         changeTopic: 'change',
       });
 
-      const result = broadcaster.getTopic(2, true);
+      const result = broadcaster.getTopic(2, 'change');
 
       expect(result).toEqual('prefix/avr_id/zone2/change');
     });
@@ -99,6 +102,7 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        availabilityTopic: 'availability',
         stateTopic: 'state',
         changeTopic: 'change',
       });
@@ -160,6 +164,7 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        availabilityTopic: 'availability',
         stateTopic: 'state',
         changeTopic: 'change',
       });
@@ -176,6 +181,7 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        availabilityTopic: 'availability',
         stateTopic: 'state',
         changeTopic: 'change',
       });
@@ -185,6 +191,27 @@ describe('MqttBroadcaster', () => {
       await broadcaster.publish({ key: 9999 as ReceiverSettings, value: { raw: 'C 55', key: 'C', value: '55' }, zone: 2, ip: '192.168.1.123' });
 
       expect(mockLog).toHaveBeenCalledWith('Cannot map setting 9999');
+    });
+  });
+
+  describe('publishAvailability()', () => {
+    it('should call publish for main zone', async () => {
+      const state = new ReceiverState();
+      state.updateState(ReceiverSettings.Volume, { raw: '55', numeric: 55 });
+      (connectAsync as jest.Mock).mockResolvedValueOnce({
+        publish: mockPublish,
+      });
+      const client = await connectAsync('mqtt://foo:123');
+      const broadcaster = new MqttBroadcaster({
+        prefix: 'prefix',
+        id: 'avr_id',
+        client,
+        availabilityTopic: 'availability',
+        stateTopic: 'state',
+        changeTopic: 'change',
+      });
+      await broadcaster.publishAvailability(true, 1);
+      expect(mockPublish).toHaveBeenCalledWith('prefix/avr_id/main_zone/availability', '{"available":true}');
     });
   });
 
@@ -200,6 +227,7 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        availabilityTopic: 'availability',
         stateTopic: 'state',
         changeTopic: 'change',
       });

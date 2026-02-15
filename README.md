@@ -97,6 +97,7 @@ Environment variables supported for setting parameters in Docker container:
 - `DMQTT_NAME`: Comma-separated list of AVR friendly names (default: "Home Theater")
 - `DMQTT_ID`: Comma-separated list of AVR unique IDs (default: "denon")
 - `DMQTT_ZONES`: Comma-separated list of | separated AVR zone names (default: "Main|Zone 2")
+- `DMQTT_AVAILABILITY_TOPIC`: Availability topic (default: "availability")
 - `DMQTT_STATE_TOPIC`: State topic (default: "state")
 - `DMQTT_CHANGE_TOPIC`: Change topic (default: "state")
 
@@ -126,21 +127,23 @@ services:
 Options:
 
 ```
-  -i, --info                       Display current version number
-  -a, --avr <list>                 Comma-separated list of AVR IP addresses (default: "192.168.1.34,192.168.1.58")
-  -d, --discover                   Discover configuration and write to JSON file (default is receivers-discovered.json)
-  -f, --file <file>                Name of configuration JSON file (default: "receivers-discovered.json")
-  -m, --mqtt <url>                 MQTT URL (default: "192.168.1.131")
-  -u, --username <username>        MQTT Username (default: "user")
-  -p, --password <password>        MQTT Password (default: "password")
-  --port                           MQTT Port <port>
-  --prefix                         MQTT Topic Prefix <prefix>
-  --name <list>                    Comma-separated list of AVR friendly names (default: "Home Theater")
-  --id <list>                      Comma-separated list of AVR unique IDs (default: "denon")
-  -z --zones <list>                Comma-separated list of | separated AVR zone names (default: "Main|Zone 2")
-  -s --state-topic <stateTopic>    State topic (default: "state")
-  -c --change-topic <changeTopic>  Change topic (default: "state")
-  -h, --help                       display help for command
+  -i, --info                             Display current version number
+  -a, --avr <list>                       Comma-separated list of AVR IP addresses (default: "192.168.1.34,192.168.1.58")
+  -d, --discover                         Discover configuration and write to JSON file (default is
+                                         receivers-discovered.json)
+  -f, --file <file>                      Name of configuration JSON file (default: "receivers-discovered.json")
+  -m, --mqtt <url>                       MQTT URL (default: "192.168.1.131")
+  -u, --username <username>              MQTT Username (default: "user")
+  -p, --password <password>              MQTT Password (default: "password")
+  --port                                 MQTT Port <port>
+  --prefix                               MQTT Topic Prefix <prefix>
+  --name <list>                          Comma-separated list of AVR friendly names (default: "Home Theater")
+  --id <list>                            Comma-separated list of AVR unique IDs (default: "denon")
+  -z --zones <list>                      Comma-separated list of | separated AVR zone names (default: "Main|Zone 2")
+  -l --availability <availabilityTopic>  Availability topic (default: "availability")
+  -s --state-topic <stateTopic>          State topic (default: "state")
+  -c --change-topic <changeTopic>        Change topic (default: "state")
+  -h, --help                             display help for command
 ```
 
 ### AVR Discovery (EXPERIMENTAL)
@@ -262,6 +265,17 @@ The `id` value for the AVR is used in the names of MQTT topics and must be uniqu
 In addition to the below topics and payloads, you can request updated status data from the receiver by posting a text
 payload of `REFRESH` to topic `{prefix}/{id}/device/command`.
 
+### Availability Topic and Payload
+
+The topic for all availability is `{prefix}/{id}/{zone}/{suffix}` where `{prefix}` is the global prefix
+(default: `denon`), `{id}` is the unique identifier of the AVR, `{zone}` is the zone identifier 
+(`main_zone`, `zone1`, `zone2`), and `{suffix}` is the availability topic as configured on launch.
+
+The payload for availability is `{ available: {availability} }` where `{availability}` is `true` if the Telnet 
+connection to the receiver is available, otherwise `false`. A `true` value is sent when the telnet connection
+is established and whenever a message is received from the recewiver. A `false` value is sent whenever the
+Telnet session disconnects or an error occurs reading from the Telnet connection.
+
 ### Command Topic and Payload
 
 The topic for all commands is `{prefix}/{id}/{zone}/command` where `{prefix}` is the global prefix (default: `denon`), 
@@ -336,9 +350,9 @@ The following payloads formats are required for each listed setting:
 
 ### State Topic and Payload
 
-All state changes are published to `{prefix}/{id}/{zone}/state` where `{prefix}` is the global prefix (default:
-`denon`), `{id}` is the unique identifier of the AVR, and `{zone}` is the zone identifier (`main_zone`, `zone1`, 
-`zone2`).
+All state changes are published to `{prefix}/{id}/{zone}/{suffix}` where `{prefix}` is the global prefix 
+(default: `denon`), `{id}` is the unique identifier of the AVR, `{zone}` is the zone identifier 
+(`main_zone`, `zone1`, `zone2`), and `{suffix}` is the state topic as configured at launch.
 
 The payload syntax varies based on the setting updated as follows:
 
