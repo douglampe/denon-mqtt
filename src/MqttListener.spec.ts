@@ -91,6 +91,8 @@ describe('MqttListener', () => {
         password: 'password',
         prefix: 'denon',
         id: 'denon',
+        stateTopic: 'state',
+        changeTopic: 'change',
         receiver: receiverConfig,
       });
       const receiver = new ReceiverManager(receiverConfig, mqttManager);
@@ -131,6 +133,8 @@ describe('MqttListener', () => {
         password: 'password',
         prefix: 'denon',
         id: 'denon',
+        stateTopic: 'state',
+        changeTopic: 'change',
         receiver: receiverConfig,
       });
       const receiver = new ReceiverManager(receiverConfig, mqttManager);
@@ -167,6 +171,8 @@ describe('MqttListener', () => {
         password: 'password',
         prefix: 'denon',
         id: 'denon',
+        stateTopic: 'state',
+        changeTopic: 'change',
         receiver: receiverConfig,
       });
       const receiver = new ReceiverManager(receiverConfig, mqttManager);
@@ -204,6 +210,8 @@ describe('MqttListener', () => {
         password: 'password',
         prefix: 'denon',
         id: 'denon',
+        stateTopic: 'state',
+        changeTopic: 'change',
         receiver: receiverConfig,
       });
       const receiver = new ReceiverManager(receiverConfig, mqttManager);
@@ -241,6 +249,8 @@ describe('MqttListener', () => {
         password: 'password',
         prefix: 'denon',
         id: 'denon',
+        stateTopic: 'state',
+        changeTopic: 'change',
         receiver: receiverConfig,
       });
       const receiver = new ReceiverManager(receiverConfig, mqttManager);
@@ -278,6 +288,8 @@ describe('MqttListener', () => {
         password: 'password',
         prefix: 'denon',
         id: 'denon',
+        stateTopic: 'state',
+        changeTopic: 'change',
         receiver: receiverConfig,
       });
       const receiver = new ReceiverManager(receiverConfig, mqttManager);

@@ -30,6 +30,8 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        stateTopic: 'state',
+        changeTopic: 'change',
       });
 
       const result = broadcaster.getTopic(1);
@@ -43,11 +45,28 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        stateTopic: 'state',
+        changeTopic: 'change',
       });
 
       const result = broadcaster.getTopic(2);
 
       expect(result).toEqual('prefix/avr_id/zone2/state');
+    });
+
+    it('should return ../zone2/change for zone 2 and change', async () => {
+      const client = await connectAsync('mqtt://foo:123');
+      const broadcaster = new MqttBroadcaster({
+        prefix: 'prefix',
+        id: 'avr_id',
+        client,
+        stateTopic: 'state',
+        changeTopic: 'change',
+      });
+
+      const result = broadcaster.getTopic(2, true);
+
+      expect(result).toEqual('prefix/avr_id/zone2/change');
     });
   });
 
@@ -80,6 +99,8 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        stateTopic: 'state',
+        changeTopic: 'change',
       });
 
       const mockLog = jest.spyOn(console, 'error');
@@ -95,7 +116,7 @@ describe('MqttBroadcaster', () => {
         zone: 1,
         value: { raw: 'ON', text: 'ON' },
         ip: '192.168.1.123',
-        topic: 'prefix/avr_id/main_zone/state',
+        topic: 'prefix/avr_id/main_zone/change',
         payload: JSON.stringify({ power: 'ON' }),
       },
       {
@@ -103,7 +124,7 @@ describe('MqttBroadcaster', () => {
         zone: 1,
         value: { raw: 'DVD', text: 'DVD' },
         ip: '192.168.1.123',
-        topic: 'prefix/avr_id/main_zone/state',
+        topic: 'prefix/avr_id/main_zone/change',
         payload: JSON.stringify({ source: 'DVD' }),
       },
       {
@@ -111,7 +132,7 @@ describe('MqttBroadcaster', () => {
         zone: 1,
         value: { raw: '55', numeric: 55 },
         ip: '192.168.1.123',
-        topic: 'prefix/avr_id/main_zone/state',
+        topic: 'prefix/avr_id/main_zone/change',
         payload: JSON.stringify({ volume: 55 }),
       },
       {
@@ -119,7 +140,7 @@ describe('MqttBroadcaster', () => {
         zone: 1,
         value: { raw: 'FL 50', key: 'FL', value: '50' },
         ip: '192.168.1.123',
-        topic: 'prefix/avr_id/main_zone/state',
+        topic: 'prefix/avr_id/main_zone/change',
         payload: JSON.stringify({ channel_setting: { key: 'FL', value: '50' } }),
       },
       {
@@ -127,7 +148,7 @@ describe('MqttBroadcaster', () => {
         zone: 2,
         value: { raw: '55', numeric: 55 },
         ip: '192.168.1.123',
-        topic: 'prefix/avr_id/zone2/state',
+        topic: 'prefix/avr_id/zone2/change',
         payload: JSON.stringify({ volume: 55 }),
       },
     ])('should publish to payload $payload to $topic', async (testData) => {
@@ -139,6 +160,8 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        stateTopic: 'state',
+        changeTopic: 'change',
       });
       await broadcaster.publish(testData);
       expect(mockPublish).toHaveBeenCalledWith(testData.topic, testData.payload);
@@ -153,6 +176,8 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        stateTopic: 'state',
+        changeTopic: 'change',
       });
 
       const mockLog = jest.spyOn(console, 'error');
@@ -175,6 +200,8 @@ describe('MqttBroadcaster', () => {
         prefix: 'prefix',
         id: 'avr_id',
         client,
+        stateTopic: 'state',
+        changeTopic: 'change',
       });
       await broadcaster.publishState(state, 1);
       expect(mockPublish).toHaveBeenCalledWith('prefix/avr_id/main_zone/state', '{"state":{"volume":55}}');
