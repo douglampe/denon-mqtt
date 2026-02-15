@@ -55,12 +55,16 @@ export class MqttManager {
     }
   }
 
-  publishAvailability(available: boolean, zone: number) {
-    return this.broadcaster.publishAvailability(available, zone);
-  }
-
-  publishConnectionLost() {
-    Promise.all(this.options.receiver.zones.map((zone) => this.broadcaster.publishAvailability(false, parseInt(zone.index) + 1)));
+  publishAvailability(available: boolean, zone?: number) {
+    if (!this.broadcaster) {
+      return;
+    }
+    
+    if (zone) {
+      return this.broadcaster.publishAvailability(available, zone);
+    } else {
+      return Promise.all(this.options.receiver.zones.map((z) => this.broadcaster.publishAvailability(available, parseInt(z.index) + 1)));
+    }
   }
 
   publishState(state: ReceiverState, zone: number) {

@@ -195,7 +195,7 @@ describe('MqttBroadcaster', () => {
   });
 
   describe('publishAvailability()', () => {
-    it('should call send for main zone', async () => {
+    it('should call publish for main zone', async () => {
       const state = new ReceiverState();
       state.updateState(ReceiverSettings.Volume, { raw: '55', numeric: 55 });
       (connectAsync as jest.Mock).mockResolvedValueOnce({

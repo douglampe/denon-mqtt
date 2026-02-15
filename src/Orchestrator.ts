@@ -33,7 +33,7 @@ export class Orchestrator {
 
     this.mqttClient.on('error', (err) => {
       console.error(err);
-      Promise.all(this.mqttManagers.map((m) => m.publishConnectionLost())).then(() => {
+      Promise.all(this.mqttManagers.map((m) => m.publishAvailability(false))).then(() => {
         process.exit();
       });
     });

@@ -68,7 +68,7 @@ export class TelnetListener {
       }
     } catch (err) {
       console.error(err);
-      await Promise.all(Array.from({ length: this.zones }, (_, i) => mqttManager.publishAvailability(false, i + 1)));
+      await mqttManager.publishAvailability(false);
     }
   }
 }
