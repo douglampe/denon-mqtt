@@ -15,6 +15,8 @@ export interface MqttManagerOptions {
   prefix: string;
   id: string;
   receiver: ReceiverConfig;
+  stateTopic: string;
+  changeTopic: string;
 }
 
 export class MqttManager {
@@ -30,6 +32,8 @@ export class MqttManager {
       prefix: this.options.prefix,
       id: this.options.receiver.id,
       client: this.mqttClient,
+      stateTopic: this.options.stateTopic,
+      changeTopic: this.options.changeTopic,
     });
 
     const mqttListener = new MqttListener({

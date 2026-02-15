@@ -2,11 +2,14 @@ import { ReceiverSettings, ReceiverState, StateValue } from 'denon-state-manager
 import { MqttClient } from 'mqtt/*';
 
 import { MqttUpdate } from './MqttUpdate';
+import { stat } from 'fs';
 
 export interface MqttBroadcasterOptions {
   prefix: string;
   id: string;
   client: MqttClient;
+  stateTopic: string;
+  changeTopic: string;
 }
 
 const ReceiverSettingsMap: Record<string, string> = {
@@ -38,13 +41,16 @@ export class MqttBroadcaster {
   public static DefaultOptions = {
     prefix: 'denon',
     id: 'denon',
+    stateTopic: 'state',
+    changeTopic: 'state',
   };
 
   constructor(private options: MqttBroadcasterOptions) {}
 
-  public getTopic(zone: number) {
+  public getTopic(zone: number, change = false): string {
     const zonePrefix = zone == 1 ? 'main_zone' : `zone${zone}`;
-    return `${this.options.prefix}/${this.options.id}/${zonePrefix}/state`;
+    const suffix = change ? this.options.changeTopic : this.options.stateTopic;
+    return `${this.options.prefix}/${this.options.id}/${zonePrefix}/${suffix}`;
   }
 
   public getStateWithKeys(state: { [key in ReceiverSettings]?: StateValue }) {
@@ -94,7 +100,7 @@ export class MqttBroadcaster {
         break;
     }
 
-    const topic = this.getTopic(update.zone);
+    const topic = this.getTopic(update.zone, true);
 
     const message = JSON.stringify(payload);
 
@@ -105,7 +111,7 @@ export class MqttBroadcaster {
   public async publishState(state: ReceiverState, zone: number): Promise<void> {
     const message = JSON.stringify({ state: this.getStateWithKeys(state.state) });
 
-    const topic = this.getTopic(zone);
+    const topic = this.getTopic(zone, false);
 
     console.log(`[MQTT:${topic}]->${message}`);
     this.options.client.publish(topic, message);
