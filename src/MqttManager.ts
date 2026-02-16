@@ -63,7 +63,7 @@ export class MqttManager {
     if (zone) {
       return this.broadcaster.publishAvailability(available, zone);
     } else {
-      return Promise.all(this.options.receiver.zones.map((z) => this.broadcaster.publishAvailability(available, parseInt(z.index) + 1)));
+      return Promise.all(this.options.receiver.zones.map((_z, i) => this.broadcaster.publishAvailability(available, i + 1)));
     }
   }
 
