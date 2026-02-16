@@ -36,7 +36,7 @@ export class CliParser {
       .option('--name <list>', 'Comma-separated list of AVR friendly names', process.env.DMQTT_NAME ?? 'Home Theater')
       .option('--id <list>', 'Comma-separated list of AVR unique IDs', process.env.DMQTT_ID ?? 'denon')
       .option('-z --zones <list>', 'Comma-separated list of | separated AVR zone names', process.env.DMQTT_ZONES ?? 'Main|Zone 2')
-      .option('-l --availability <availabilityTopic>', 'Availability topic', process.env.DMQTT_AVAILABILITY_TOPIC ?? 'availability')
+      .option('-l --availability-topic <availabilityTopic>', 'Availability topic', process.env.DMQTT_AVAILABILITY_TOPIC ?? 'availability')
       .option('-s --state-topic <stateTopic>', 'State topic', process.env.DMQTT_STATE_TOPIC ?? 'state')
       .option('-c --change-topic <changeTopic>', 'Change topic', process.env.DMQTT_CHANGE_TOPIC ?? 'state')
       .action(CliParser.start);
