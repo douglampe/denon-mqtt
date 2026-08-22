@@ -1,3 +1,4 @@
+import fs from 'fs/promises';
 import { connectAsync, MqttClient } from 'mqtt';
 
 import { MqttManager } from './MqttManager';
@@ -14,6 +15,7 @@ export interface OrchestratorOptions {
   availabilityTopic: string;
   stateTopic: string;
   changeTopic: string;
+  payloadFile: string;
 }
 
 export class Orchestrator {
@@ -73,6 +75,14 @@ export class Orchestrator {
   }
 
   async start() {
+    if (this.options.payloadFile) {
+      const payloadsContent = await fs.readFile(this.options.payloadFile);
+      const payloadsJson = JSON.parse(payloadsContent.toString());
+
+      for (const payload of payloadsJson) {
+        this.mqttClient.publish(payload.topic, payload.payload);
+      }
+    }
     while (true) {
       await Promise.all(this.receiverManagers.map((r) => r.read()));
     }

@@ -105,8 +105,7 @@ export class MqttBroadcaster {
 
     const message = JSON.stringify(payload);
 
-    console.log(`[MQTT:${topic}]->${message}`);
-    this.options.client.publish(topic, message);
+    return this.publishMessage(topic, message);
   }
 
   public async publishState(state: ReceiverState, zone: number): Promise<void> {
@@ -114,10 +113,7 @@ export class MqttBroadcaster {
 
     const topic = this.getTopic(zone, this.options.stateTopic);
 
-    console.log(`[MQTT:${topic}]->${message}`);
-    this.options.client.publish(topic, message);
-
-    return Promise.resolve();
+    return this.publishMessage(topic, message);
   }
 
   public async publishAvailability(availability: boolean, zone: number): Promise<void> {
@@ -125,8 +121,12 @@ export class MqttBroadcaster {
 
     const topic = this.getTopic(zone, this.options.availabilityTopic);
 
+    return this.publishMessage(topic, message);
+  }
+
+  public async publishMessage(topic: string, message: string) {
     console.log(`[MQTT:${topic}]->${message}`);
-    this.options.client.publish(topic, message);
+    this.options.client.publish(topic, message)
 
     return Promise.resolve();
   }

@@ -39,6 +39,7 @@ export class CliParser {
       .option('-l --availability-topic <availabilityTopic>', 'Availability topic', process.env.DMQTT_AVAILABILITY_TOPIC ?? 'availability')
       .option('-s --state-topic <stateTopic>', 'State topic', process.env.DMQTT_STATE_TOPIC ?? 'state')
       .option('-c --change-topic <changeTopic>', 'Change topic', process.env.DMQTT_CHANGE_TOPIC ?? 'state')
+      .option('-q --payload-file <payloadFile>', 'File with message payloads to send on startup', process.env.DMQTT_PAYLOAD_FILE)
       .action(CliParser.start);
 
     await program.parseAsync(options.args);
