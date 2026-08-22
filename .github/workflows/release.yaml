@@ -6,7 +6,7 @@ on:
       - 'v*.*.*'
 
 jobs:
-  build-and-publish:
+  build-test-publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -51,12 +51,15 @@ jobs:
       - name: Build
         run: yarn build
 
+      - name: Test
+        run: yarn test
+
       - uses: actions/setup-node@v3
         with:
           node-version: '22.x'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Publish Package
-        run: npm publish
+        run: npm publish --provenance
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
