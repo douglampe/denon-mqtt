@@ -79,6 +79,7 @@ export class Orchestrator {
       const payloadsContent = await fs.readFile(this.options.payloadFile);
       const payloadsJson = JSON.parse(payloadsContent.toString());
 
+      console.log('Sending payloads...');
       for (const payload of payloadsJson) {
         this.mqttClient.publish(payload.topic, payload.payload);
       }
