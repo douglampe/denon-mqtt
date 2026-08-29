@@ -1,6 +1,6 @@
 {
   "name": "denon-mqtt",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "MQTT Provider for Denon Receivers",
   "main": "dist/entryPoint.js",
   "bin": {
@@ -15,7 +15,7 @@
     "lint": "eslint src --fix --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest --config jest.json --coverage --detectOpenHandles",
-    "test:nocover": "jest --config jest.json --detectOpenHandles",
+    "test:nocover": "jest --config jest.json --detectOpenHandles --silent",
     "test:one": "jest --config jest-one.json --detectOpenHandles"
   },
   "files": [
