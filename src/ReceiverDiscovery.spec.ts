@@ -12,6 +12,7 @@ const mockTelnetInstance = {
   connect: jest.fn(),
   destroy: jest.fn(),
   nextData: jest.fn(),
+  send: jest.fn(),
 };
 
 const createReceiver = () => new ReceiverDiscovery('denon', '192.168.1.1234');
@@ -158,13 +159,15 @@ describe('getSelectedSources()', () => {
 });
 
 describe('setSource()', () => {
-  it('should throw error when fetch fails', async () => {
+  it('should send PW? when fetch fails', async () => {
     const receiver = createReceiver();
     await receiver.init();
 
     mockFetch.mockResolvedValue({ status: 500 });
 
-    await expect(receiver.setSource('10')).rejects.toThrow('Error setting source to index 10');
+    await receiver.setSource('10');
+    
+    await expect(mockTelnetInstance.send).toHaveBeenCalledWith('PW?\r');
   });
 
   it('should succeed on 200 response', async () => {
@@ -201,13 +204,15 @@ describe('waitForReponse()', () => {
     expect(result).toBe('SIDVD');
   });
 
-  it('throws if prefix is never received', async () => {
+  it('should exit loop if PW message received', async () => {
     const receiver = createReceiver();
-    mockTelnetInstance.nextData.mockResolvedValue('ABC\r');
+
+    mockTelnetInstance.nextData.mockResolvedValueOnce('XYZ\r').mockResolvedValueOnce('PWON\r');
 
     await receiver.init();
+    const result = await receiver.waitForReponse('SI');
 
-    await expect(receiver.waitForReponse('SI')).rejects.toThrow('No response received');
+    expect(result).toBe('PWON');
   });
 });
 

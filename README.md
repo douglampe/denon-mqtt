@@ -127,23 +127,23 @@ services:
 Options:
 
 ```
-  -i, --info                             Display current version number
-  -a, --avr <list>                       Comma-separated list of AVR IP addresses (default: "192.168.1.34,192.168.1.58")
-  -d, --discover                         Discover configuration and write to JSON file (default is
-                                         receivers-discovered.json)
-  -f, --file <file>                      Name of configuration JSON file (default: "receivers-discovered.json")
-  -m, --mqtt <url>                       MQTT URL (default: "192.168.1.131")
-  -u, --username <username>              MQTT Username (default: "user")
-  -p, --password <password>              MQTT Password (default: "password")
-  --port                                 MQTT Port <port>
-  --prefix                               MQTT Topic Prefix <prefix>
-  --name <list>                          Comma-separated list of AVR friendly names (default: "Home Theater")
-  --id <list>                            Comma-separated list of AVR unique IDs (default: "denon")
-  -z --zones <list>                      Comma-separated list of | separated AVR zone names (default: "Main|Zone 2")
-  -l --availability <availabilityTopic>  Availability topic (default: "availability")
-  -s --state-topic <stateTopic>          State topic (default: "state")
-  -c --change-topic <changeTopic>        Change topic (default: "state")
-  -h, --help                             display help for command
+  -i, --info                                   Display current version number
+  -a, --avr <list>                             Comma-separated list of AVR IP addresses (default: "localhost")
+  -d, --discover                               Discover configuration and write to JSON file (default is receivers-discovered.json)
+  -f, --file <file>                            Name of configuration JSON file (default: "receivers-discovered.json")
+  -m, --mqtt <url>                             MQTT URL (default: "localhost")
+  -u, --username <username>                    MQTT Username (default: "user")
+  -p, --password <password>                    MQTT Password (default: "password")
+  --port                                       MQTT Port <port>
+  --prefix                                     MQTT Topic Prefix <prefix>
+  --name <list>                                Comma-separated list of AVR friendly names (default: "Home Theater")
+  --id <list>                                  Comma-separated list of AVR unique IDs (default: "denon")
+  -z --zones <list>                            Comma-separated list of | separated AVR zone names (default: "Main|Zone 2")
+  -l --availability-topic <availabilityTopic>  Availability topic (default: "availability")
+  -s --state-topic <stateTopic>                State topic (default: "state")
+  -c --change-topic <changeTopic>              Change topic (default: "state")
+  -q --payload-file <payloadFile>              File with message payloads to send on startup
+  -h, --help                                   display help for command
 ```
 
 ### AVR Discovery (EXPERIMENTAL)

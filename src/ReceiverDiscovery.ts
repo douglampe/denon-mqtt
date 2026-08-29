@@ -31,6 +31,7 @@ export class ReceiverDiscovery {
   }
 
   public async disconnect() {
+    console.log("Disconnecting Telnet connection.")
     await this.client.destroy();
   }
 
@@ -202,9 +203,9 @@ export class ReceiverDiscovery {
     const result = await fetch(`https://${this.config.ip}:10443/ajax/globals/set_config?type=7&data=${data}`);
 
     if (result.status !== 200) {
-      await this.disconnect();
       console.error(result);
-      throw new Error(`Error setting source to index ${index} for zone ${zone}`);
+      console.error(`Error setting source to index ${index} for zone ${zone}`);
+      await this.client.send('PW?\r');
     }
   }
 
@@ -240,16 +241,16 @@ export class ReceiverDiscovery {
   public async waitForReponse(prefix: string) {
     let result: string | null = '';
     let i = 0;
-    while (!result?.startsWith(prefix) && i++ < 100) {
+    while (!result?.startsWith(prefix) && !result.startsWith('PW') && i++ < 100) {
       const data = await this.client.nextData();
       const lines = data?.substring(0, data.length - 1).split('\r');
       for (let j = 0; !result?.startsWith(prefix) && lines && j < lines.length; j++) {
         result = lines[j];
       }
     }
-
+    
     if (!result.startsWith(prefix)) {
-      throw new Error(`Error: No response received with prefix ${prefix}.`);
+      console.error(`Error: No response received with prefix ${prefix}.`);
     }
 
     console.log(`[TELNET:${this.config.ip}]<-${result}`);
